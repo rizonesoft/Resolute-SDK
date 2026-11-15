@@ -11,24 +11,18 @@ License, so a render never depends on what a machine has installed.
 """
 from __future__ import annotations
 
-import io
 import sys
 from pathlib import Path
 
-import resvg_py
-from PIL import Image, ImageFont
-
 BRAND = Path(__file__).resolve().parent
-FONTS = BRAND / "fonts"
-FONT_FILES = [str(p) for p in sorted(FONTS.glob("*.ttf"))]
+sys.path.insert(0, str(BRAND))
+import brandkit  # noqa: E402
+from brandkit import GRAPHITE, GRAPHITE_RAISED, MUTED_ON_DARK, PAPER, render, svg, text_width  # noqa: E402
 
-# The palette. DESIGN.md section "Identity" carries the same values.
-GRAPHITE, GRAPHITE_RAISED = "#17191E", "#2A2E36"
+# The SDK's own colours. DESIGN.md section 15 carries the same values.
 PLATE_LOW, PLATE_MID = "#3B414D", "#717B8C"
 PLATE_LOW_ON_DARK, PLATE_MID_ON_DARK = "#4A515E", "#8A93A3"
 AMBER, AMBER_INK = "#FFB020", "#7A4E00"
-PAPER, MUTED_ON_DARK = "#F6F5F2", "#C3C7CF"
-
 TAGLINE = "The shared foundation of the Resolute suite"
 
 
@@ -52,16 +46,6 @@ def icon_small() -> str:
             f'<g stroke="{GRAPHITE}" stroke-width="6" stroke-linejoin="round">'
             f'<polygon points="48,40 82,57 48,74 14,57" fill="{PLATE_MID}"/>'
             f'<polygon points="48,20 82,37 48,54 14,37" fill="{AMBER}"/></g>')
-
-
-def svg(width: int, height: int, body: str, label: str) -> str:
-    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}" '
-            f'role="img" aria-label="{label}">{body}</svg>\n')
-
-
-def text_width(text: str, font: str, size: float, tracking_em: float = 0.0) -> float:
-    face = ImageFont.truetype(str(FONTS / font), 1000)
-    return (face.getlength(text) / 1000 + tracking_em * len(text)) * size
 
 
 def wordmark(x: float, baseline: float, size: float, ink: str, chip: str) -> tuple[str, float]:
@@ -114,56 +98,22 @@ def social_preview() -> str:
                "Resolute SDK. " + TAGLINE)
 
 
-def render(markup: str, width: int | None = None, zoom: float | None = None) -> bytes:
-    return bytes(resvg_py.svg_to_bytes(svg_string=markup, width=width, zoom=zoom, font_files=FONT_FILES, skip_system_fonts=True,
-                                       text_rendering="geometric_precision", shape_rendering="geometric_precision"))
-
-
-def ico(large: str, small: str) -> bytes:
-    """Every size rendered from the vector, never scaled from a bitmap: the small drawing below 40 pixels."""
-    sizes = (16, 20, 24, 32, 40, 48, 64, 96, 128, 256)
-    frames = [Image.open(io.BytesIO(render(small if size < 40 else large, size))).convert("RGBA") for size in sizes]
-    out = io.BytesIO()
-    frames[-1].save(out, format="ICO", sizes=[(s, s) for s in sizes], append_images=frames[:-1])
-    return out.getvalue()
-
-
 def build() -> dict[str, bytes]:
     large, small = svg(96, 96, icon(), "Resolute SDK icon"), svg(96, 96, icon_small(), "Resolute SDK icon, small sizes")
+    files = brandkit.icon_files("resolute-sdk", large, small)
     sources = {
-        "resolute-sdk-icon.svg": large,
-        "resolute-sdk-icon-small.svg": small,
         "resolute-sdk-wordmark-light.svg": wordmark_svg(dark=False),
         "resolute-sdk-wordmark-dark.svg": wordmark_svg(dark=True),
         "readme-banner.svg": readme_banner(),
         "social-preview.svg": social_preview(),
     }
-    files: dict[str, bytes] = {name: text.encode("utf-8") for name, text in sources.items()}
-    for size in (512, 256, 192, 64, 48):
-        files[f"resolute-sdk-icon-{size}.png"] = render(large, size)
-    for size in (32, 16):
-        files[f"resolute-sdk-icon-{size}.png"] = render(small, size)
+    files.update({name: text.encode("utf-8") for name, text in sources.items()})
     files["resolute-sdk-wordmark-light.png"] = render(sources["resolute-sdk-wordmark-light.svg"], zoom=3)
     files["resolute-sdk-wordmark-dark.png"] = render(sources["resolute-sdk-wordmark-dark.svg"], zoom=3)
     files["readme-banner.png"] = render(sources["readme-banner.svg"], 2560)
     files["social-preview.png"] = render(sources["social-preview.svg"], 1280)
-    files["resolute-sdk.ico"] = ico(large, small)
     return files
 
 
-def main() -> int:
-    files = build()
-    if "--check" in sys.argv[1:]:
-        stale = [name for name, data in files.items() if not (BRAND / name).is_file() or (BRAND / name).read_bytes() != data]
-        for name in stale:
-            print(f"brand: {name} is not what brand/build.py builds; run python brand/build.py")
-        print(f"brand: {len(files) - len(stale)} of {len(files)} asset(s) current")
-        return 1 if stale else 0
-    for name, data in files.items():
-        (BRAND / name).write_bytes(data)
-        print(f"brand: wrote {name} ({len(data)} bytes)")
-    return 0
-
-
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(brandkit.main(BRAND, build()))

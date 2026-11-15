@@ -247,16 +247,17 @@ Those windows are not DPI-aware, have no dark mode, and predate every rule in th
 
 ## 14. Application icons
 
-Each tool's icon is its own: full colour, drawn for that tool in its own repository, and never a Lucide glyph on a shared tile. What the icons share is how they are constructed, so eighty of them read as one family in a taskbar without looking alike.
+Each tool's icon is its own: full colour, drawn for that tool in its own repository, and never a Lucide glyph. Decided by the operator on 2026-11-15: the icons are not set on a shared tile. What they share is how they are constructed, so eighty of them read as one family in a taskbar without looking alike.
 
-- **One silhouette.** A rounded square on a 96-unit grid with a corner radius of 22. The picture sits inside a 60-unit safe area.
-- **One construction.** Flat facets, no gradients, no outlines, no drop shadows. Depth comes from stacked or overlapping planes drawn on the 2:1 isometric angle of the SDK's plates, lit from the top: the top face is the lightest tone, faces below it step darker.
-- **Its own object.** The picture is the thing the tool acts on or the result it produces, chosen so it is recognisable without the name: a key and a shield for Ownership, a drive for Drive Repair. Not an abstract mark, and not a letter.
-- **Its own colour.** Each tool has one signature hue with three tones of it (light face, mid face, dark face) and at most one second hue as a highlight. Amber is the SDK's and the launcher's and is not a tool's signature hue. The ground is Graphite `#17191E`, or the tool's darkest tone when the picture needs it.
-- **Two drawings.** A detailed drawing for 40 pixels and up, and a simplified one below that with fewer planes and wider gaps. Every size in the `.ico` is rendered from the vector, never scaled from a bitmap: 16, 20, 24, 32, 40, 48, 64, 96, 128 and 256.
-- **Legible on both grounds.** The icon is checked on a light and a dark taskbar and at 16 pixels before it ships.
-- **Built by a script.** A tool's `brand/build.py` writes its SVG sources, PNG renders and `.ico` from one description of the icon, as this repository's does, so the assets cannot drift apart.
+- **Free-standing.** The object is the silhouette. There is no rounded-square tile, plate or badge behind it, and each tool's outline is its own. The drawing fills an 80-unit box centred on a 96-unit grid.
+- **Its own object.** The picture is the thing the tool acts on or the result it produces, chosen so it is recognisable without the name: a keyhole shield for Ownership, a drive for Drive Repair. Not an abstract mark, and not a letter.
+- **Its own colour.** Each tool has one signature hue in two or three tones (light face, mid face, dark face) and at most one second hue as a highlight. Amber is the SDK's and the launcher's and is not a tool's signature hue.
+- **One construction.** Flat faces, no gradients, no outlines, no drop shadows. Depth comes from faces lit from the upper left: the face toward the light is the lightest tone. Every corner is rounded, three units at least, so no edge reads as sharp.
+- **Legible on both grounds.** With no tile, the icon sits directly on a light or a dark taskbar. Its tones stay in the middle of the lightness range (no face darker than `#1F1F1F` or lighter than `#F0F0F0`), and a cut-out shows the ground through it. It is checked on both grounds at 16 pixels before it ships.
+- **Two drawings.** A detailed drawing for 40 pixels and up, and a simplified one below that with fewer parts and larger openings. Every size in the `.ico` is rendered from the vector, never scaled from a bitmap: 16, 20, 24, 32, 40, 48, 64, 96, 128 and 256.
+- **Built by a script.** A tool's `brand/build.py` describes its icon, name, tagline and colours, and `sdk/brand/brandkit.py` writes the SVG sources, PNG renders, `.ico`, wordmarks, README banner and social preview from that, with the suite's fonts. `python brand/build.py --check` fails when a tracked asset differs from what the script builds.
 
+The SDK's own mark (section 15) keeps its tile: it is a repository's mark, not a tool on a taskbar.
 ## 15. Identity of the SDK
 
 Direction B, "Layers", chosen by the operator on 2026-11-15. Three stacked plates, the top one amber: what every tool stands on.
