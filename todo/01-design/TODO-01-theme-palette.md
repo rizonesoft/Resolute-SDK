@@ -36,6 +36,8 @@ title: "TODO-01 -- The chosen palette in the UI library"
 | 2 | §2 | Contrast floor test for token pairs | §1 | [ ] |
 | 3 | §3 | Rendered goldens re-captured | §1, D00 T01 §3 | [ ] |
 | 4 | §4 | House-style contract moved from Resolute | D00 T01 §3 | [ ] |
+| 5 | §5 | Chart control for values over time | §1 | [ ] |
+| 6 | §6 | Tool window layout as one shared control | §1 | [ ] |
 
 ## 1. Palette Values in the Theme
 
@@ -120,6 +122,60 @@ The offscreen render goldens pin what each control looks like per theme and scal
 
 **Test checkpoint:** `reskit\cmake\bin\ctest.exe --preset debug -L housestyle` passes, and fails when one constant in the contract is changed.
 
+## 5. Chart Control for Values Over Time
+
+MemBoost and Firemin both show memory use over time, and the operator asked for graphs in both on 2026-11-15. A graph is a control, so it is built once here: a tool names its series and the library draws them. `DESIGN.md` section 16 forbids a tool drawing its own.
+
+**Phase:** 2
+**Needs:** windows-host, display-session
+**Surface:** yes
+**Fidelity:** the chart control in light and dark at 96 and 144 DPI, against `DESIGN.md` sections 3, 4 and 16.
+**Job:** a person sees how a value moved over the last minutes or hours and reads any point's exact value. Consumer: the rendered chart, compared with the series it was given.
+**Treatment:** a line or filled area per series in theme colours, a time axis and a value axis with units, and the nearest point's value shown on hover and on keyboard focus. Cheaper substitute that fails the checkpoint: a bitmap drawn by the tool, which is neither themed nor reachable by a screen reader.
+**Chrome:** the library's own drawing surface, typography and tokens. No new colour outside the theme.
+
+**Build order:**
+
+1. Add `shared/resolute-ui/include/resolute/controls/chart.h` and `src/controls/chart.cpp`: a series model and a Direct2D renderer. Done when: a test series renders offscreen and matches its golden.
+2. Add the interaction: hover and keyboard focus name the nearest point. Done when: the UI Automation tree exposes each series and its current value.
+
+- [ ] Declare the model in `shared/resolute-ui/include/resolute/controls/chart.h`: named series of timestamped values, a unit, and a visible time window. Done when: a unit test builds a two-series chart and reads both back. Cheaper substitute: a chart that takes pixels, which makes every tool compute its own layout.
+- [ ] Render lines and filled areas in `shared/resolute-ui/src/controls/chart.cpp` with series colours taken from theme tokens. Done when: the offscreen render matches its golden in light and dark at 96 and 144 DPI.
+- [ ] Draw the axes: time along the bottom in the user's locale, values up the side with the unit, both from the type ramp. Done when: a series spanning midnight labels the date change, and no label overlaps another at the minimum width.
+- [ ] Show the nearest point's time and value on hover and on arrow-key focus. Done when: a driven test moves focus across five points and reads five values. Cheaper substitute: hover only, which leaves keyboard users without values.
+- [ ] Expose each series and its focused value through UI Automation. Done when: a UI Automation walk names every series with its unit.
+- [ ] Keep a long series cheap: draw at most one point per pixel column. Done when: a series of 100,000 points renders within the frame budget of `DESIGN.md` section 10, measured.
+- [ ] Honour reduced motion and high contrast. Done when: with animation off a new point appears without a transition, and in high contrast the series use system colours.
+- [ ] Commit: `ui: a chart control for values over time`
+
+**Test checkpoint:** `reskit\cmake\bin\ctest.exe --preset debug -L chart` passes, with goldens for both themes and scales, and fails when a series value is changed.
+
+## 6. Tool Window Layout as One Shared Control
+
+`DESIGN.md` section 16 makes every tool's window the same arrangement: sidebar, content header with actions, content, status bar. Seven tools chose it on 2026-11-15. Built once here as a host a tool fills with its sections, so no tool assembles it by hand and the eighty windows cannot drift.
+
+**Phase:** 2
+**Needs:** windows-host, display-session
+**Surface:** yes
+**Fidelity:** the tool window host in light and dark at 96 and 144 DPI, against `DESIGN.md` section 16.
+**Job:** a tool declares its sections and gets the suite's window. Consumer: a sample tool built on the host, driven by keyboard.
+**Treatment:** the sidebar, header, content and status bar composed from the existing controls, with Activity, Settings and About placed last by the host. Cheaper substitute that fails the checkpoint: a code sample each tool copies, which is fourteen copies again.
+**Chrome:** the library's sidebar, toolbar, list and status bar controls.
+
+**Build order:**
+
+1. Add `shared/resolute-ui/include/resolute/toolwindow.h` and `src/toolwindow.cpp`: a host taking a list of sections. Done when: a sample with two sections shows them above Activity, Settings and About.
+2. Add the content header's actions and the status text as section properties. Done when: switching sections changes the header, its buttons and the status bar.
+
+- [ ] Declare the host in `shared/resolute-ui/include/resolute/toolwindow.h`: sections with a name, an icon, a content view, header actions and a status text. Done when: a sample builds a window from two sections in under twenty lines. Cheaper substitute: exposing only the existing controls, which leaves the arrangement to each tool.
+- [ ] Implement it in `shared/resolute-ui/src/toolwindow.cpp`, placing the tool's sections first and Activity, Settings and About last. Done when: the sample's sidebar shows that order and the selection indicator slides.
+- [ ] Draw the content header: title left, actions right, the primary one last as the accent button. Done when: a section with two actions shows them in that order and they are reachable by Tab.
+- [ ] Collapse the sidebar to icons under 600 pixels of width. Done when: a driven resize collapses and expands it and the selected section stays selected.
+- [ ] Capture the sample in both themes and scales to `docs/captures/`. Done when: four captures are committed with their provenance.
+- [ ] Cover it in the suite. Done when: `reskit\cmake\bin\ctest.exe --preset debug -L toolwindow` passes, and fails when Activity is placed before a tool section.
+- [ ] Commit: `ui: the suite's tool window, declared by its sections`
+
+**Test checkpoint:** `reskit\cmake\bin\ctest.exe --preset debug -L toolwindow` passes and the four captures exist under `docs/captures/`.
 ## Verification
 
 - A driven window in both themes shows the section 3 palette, the contrast case lists every pair above its floor, and the render and house-style cases pass on the committed goldens and contract.

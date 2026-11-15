@@ -30,7 +30,7 @@ Sections: 5 | Checklist items: 24
 
 ### Phase 2: The design in code
 
-Sections: 4 | Checklist items: 17
+Sections: 6 | Checklist items: 32
 
 | Status | Reference  | Deliverable                              | Needs                         | Items |
 | ------ | ---------- | ---------------------------------------- | ----------------------------- | ----- |
@@ -38,6 +38,8 @@ Sections: 4 | Checklist items: 17
 | [ ]    | D01 T01 §2 | Contrast Floor Test for Token Pairs      | windows-host                  | 4     |
 | [ ]    | D01 T01 §3 | Rendered Goldens Re-Captured             | windows-host, display-session | 3     |
 | [ ]    | D01 T01 §4 | House-Style Contract Moved From Resolute | windows-host                  | 4     |
+| [ ]    | D01 T01 §5 | Chart Control for Values Over Time       | windows-host, display-session | 8     |
+| [ ]    | D01 T01 §6 | Tool Window Layout as One Shared Control | windows-host, display-session | 7     |
 
 ### Phase 3: The framework
 
@@ -57,6 +59,6 @@ Sections: 1 | Checklist items: 4
 | ------ | ---------- | ------------------------------------------------------- | ----- | ----- |
 | [ ]    | D02 T01 §2 | Repair Contract Plan Authored From Resolute's Domain 02 | none  | 4     |
 
-Progress: 0/16 verified sections, 7 ready to run now.
+Progress: 0/18 verified sections, 7 ready to run now.
 
-Checklist: 0/72 items completed (includes Commit items).
+Checklist: 0/87 items completed (includes Commit items).

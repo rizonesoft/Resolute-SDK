@@ -286,3 +286,32 @@ The assets are in `brand/`, all written by `python brand/build.py` (`--check` fa
 | `social-preview.svg`, `.png` | The repository's social preview, 1280 by 640 |
 
 Rules: the mark is never recoloured, stretched or set on a photograph; the plates keep their order and the top one is always Amber; the name is always "Resolute" with the SDK chip, never "ResoluteSDK".
+
+## 16. The tool window
+
+Decided by the operator on 2026-11-15, when the first seven tools each chose it from three layouts. Every tool's main window is the same arrangement, so a person who has used one tool has used them all, and a new feature gets a section instead of crowding the first screen.
+
+```
++---------------------------------------------------------------+
+| [icon] Tool name                                    _  []  X  |   caption, drawn by the library
++--------------+------------------------------------------------+
+| First        | First                    [ Secondary ] [ Do ]  |   content header: the section's title, then its actions
+| Second       +------------------------------------------------+
+| Activity     | row                                    state   |
+| Settings     | row                                    state   |   the section's content
+| About        | row                                    state   |
++--------------+------------------------------------------------+
+| what the content shows, in words                              |   status bar
++---------------------------------------------------------------+
+```
+
+- **Sidebar on the left.** The tool's own sections first, then Activity, Settings and About, in that order and with those names in every tool. The selected section has the accent indicator, which slides between positions. Below roughly 600 pixels of width the sidebar collapses to icons (section 5).
+- **Content on the right.** A header with the section's title on the left and its actions on the right, the primary action last and drawn as the accent button, then the section's content.
+- **The first section is the tool.** It opens selected and shows the thing the tool acts on as rows, each with its state as an icon and a word (section 3: colour is never the only signal). The primary action's label is the action that changes the state.
+- **Activity is the log made readable.** What the tool did, newest first, one line per action with its time. Every tool has it and it is fed by the same record the log file is.
+- **Settings and About are the framework's.** The tool hosts the framework's pages and adds a page of its own only for options its `DESIGN.md` names.
+- **A status bar** under both panes says what the content shows, in words.
+- **No menu bar, no splash screen and no decoration.** What a menu held lives in a section or in the content header.
+- **Graphs** are drawn with the library's chart control, never by a tool. A tool that shows a value over time (memory in use, for example) names the series and the library draws it in the theme's colours, with the values reachable by keyboard and by a screen reader.
+
+A tool's own `DESIGN.md` lists its sections and says what the first one shows. It does not restate this arrangement.
