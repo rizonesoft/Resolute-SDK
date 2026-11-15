@@ -36,6 +36,7 @@ PAPER, MUTED_ON_DARK = "#F6F5F2", "#C3C7CF"
 
 ICO_SIZES = (16, 20, 24, 32, 40, 48, 64, 96, 128, 256)
 SMALL_BELOW = 40   # the size under which the simplified drawing is used
+SOCIAL_COLUMN = 660  # the social preview's text column: from x 96 to just short of the icon at x 800
 
 
 def svg(width: int, height: int, body: str, label: str) -> str:
@@ -107,14 +108,32 @@ def app_assets(slug: str, name: str, tagline: str, large: str, small: str, socia
         text, width = name_text(name, 84, 58, 44, ink)
         return svg(int(84 + width + 10), 80, placed(large, 8, 8, 64) + text, name)
 
-    text, _ = name_text(name, 280, 158, 64, PAPER)
+    # A long name is set smaller in the banner and on two lines in the social preview: "Sleep and Wake Diagnostics" ran under
+    # the icon and off the edge at the one fixed size.
+    banner_size = 64
+    while banner_size > 40 and text_width(name, "Sora-Bold.ttf", banner_size, -0.03) > 940:
+        banner_size -= 2
+    text, _ = name_text(name, 280, 158, banner_size, PAPER)
     banner = svg(1280, 320, f'<rect width="1280" height="320" fill="{GRAPHITE}"/>' + placed(large, 72, 76, 168) + text
                  + f'<text x="282" y="214" font-family="Inter" font-size="22" fill="{MUTED_ON_DARK}">{tagline}</text>',
                  f"{name}. {tagline}")
     # The tagline wraps inside the column left of the icon: one long line ran under the icon on the first tool built.
     lines = wrapped(tagline, "Inter-Regular.ttf", 30, 640)
-    top = 280 if len(lines) == 1 else 258
-    text, _ = name_text(name, 96, top, 104, PAPER)
+    name_size, name_lines = 104, [name]
+    while name_size > 56 and max(text_width(line, "Sora-Bold.ttf", name_size, -0.03) for line in name_lines) > SOCIAL_COLUMN:
+        name_size -= 4
+        name_lines = wrapped(name, "Sora-Bold.ttf", name_size, SOCIAL_COLUMN)
+        if len(name_lines) > 2:
+            name_lines = [name]
+    if len(name_lines) == 1 and name_size == 104:
+        top = 280 if len(lines) == 1 else 258
+    else:
+        # The whole block (name, tagline, credit) is centred on the height; `top` is the last name line's baseline.
+        leading = name_size * 1.08
+        block = name_size * 0.72 + leading * (len(name_lines) - 1) + 70 + 42 * len(lines) + 28
+        top = (640 - block) / 2 + name_size * 0.72 + leading * (len(name_lines) - 1)
+    text = "".join(name_text(line, 96, top - name_size * 1.08 * (len(name_lines) - 1 - index), name_size, PAPER)[0]
+                   for index, line in enumerate(name_lines))
     rows = "".join(f'<text x="98" y="{top + 70 + 42 * index}" font-family="Inter" font-size="30" fill="{social_muted}">{line}</text>'
                    for index, line in enumerate(lines))
     credit_y = top + 70 + 42 * len(lines) + 28
