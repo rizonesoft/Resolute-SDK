@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="brand/readme-banner.png" alt="Resolute SDK: the shared foundation of the Resolute suite" width="100%">
+</p>
+
 # Resolute-SDK
 
 **The shared foundation of the Resolute suite: one UI library, one toolchain and one set of build rules, pinned by commit by the launcher and by every tool.**
@@ -8,17 +12,21 @@ Resolute is Rizonesoft's suite of Windows system utilities. Each tool lives in i
 
 | Path | What it is |
 | --- | --- |
-| `shared/resolute-ui/` | The Direct2D UI library every surface is drawn with. Namespace `rui::`, include prefix `resolute/`, static library `ResoluteUI_static` |
-| `shared/lucide/` | The icon set, embedded into each executable. Static library `Lucide_static` |
+| `shared/resolute-ui/` | The Direct2D UI library every surface is drawn with. Target `ResoluteUI_static` |
+| `shared/lucide/` | The icon set, embedded into each executable. Target `Lucide_static` |
 | `cmake/ResoluteSdk.cmake` | The one include a consumer needs. It applies everything below |
 | `cmake/ResolutePlatform.cmake` | C++23 and the Windows 10 1809 floor |
 | `cmake/ResoluteLinkPolicy.cmake` | A fully static runtime, ThinLTO for Release and reproducible binaries |
 | `cmake/ResoluteWarnings.cmake` | The warning policy, applied per target, warnings as errors |
 | `cmake/ResoluteJobPools.cmake` | Ninja job pools sized to the machine's memory |
-| `toolchain.json` | The pinned toolchain: llvm-mingw, CMake, Ninja, CPython and sccache, each with its URL and SHA-256 |
-| `scripts/bootstrap.ps1` | Downloads the pinned toolchain into `reskit/`, hash-checked. Nothing is installed system-wide |
-| `scripts/cpp-env.ps1` | Reports every toolchain component and fails by name when one is missing or is not the pin |
+| `toolchain.json` | The pinned toolchain: llvm-mingw, CMake, Ninja, CPython and sccache, each with a SHA-256 |
+| `scripts/bootstrap.ps1` | Downloads the pinned toolchain into `reskit/`, hash-checked, nothing system-wide |
+| `scripts/cpp-env.ps1` | Reports each toolchain component; fails by name when one is missing or off the pin |
 | `scripts/toolchain-latest.ps1` | Says whether a pin has fallen behind upstream. It never changes a pin |
+| `DESIGN.md` | The suite's design contract: every surface of every tool answers to it |
+| `brand/` | The SDK's icon, wordmark and banners, built by `brand/build.py` |
+
+The UI library's namespace is `rui::` and its headers are included as `resolute/...`.
 
 ## How does a tool use it?
 
