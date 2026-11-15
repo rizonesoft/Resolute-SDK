@@ -1,0 +1,33 @@
+# The bootstrapped toolchain, never committed (scripts/bootstrap.ps1 downloads it from toolchain.json).
+/reskit/llvm-mingw/
+/reskit/cmake/
+/reskit/ninja/
+/reskit/python/
+/reskit/sccache/
+# The authoring-only reference-data server.
+/reskit/mysql/
+/reskit/mysql.new/
+
+# Derived output
+/build/
+/Bin/
+/out/
+__pycache__/
+*.pyc
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+*~
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# Editors
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo

@@ -1,0 +1,10 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Scripts and prose check out LF everywhere: a CR breaks the shebang on POSIX
+# runners, and mixed endings churn diffs across platforms. C++ sources stay on
+# text=auto (native endings, which every compiler here accepts).
+*.py text eol=lf
+*.ps1 text eol=lf
+*.sh text eol=lf
+*.md text eol=lf
