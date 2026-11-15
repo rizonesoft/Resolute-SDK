@@ -41,6 +41,7 @@ title: "TODO-01 -- The SDK builds, tests and gates itself"
 | 6 | §6 | Toolchain pin currency decision | -- | [ ] |
 | 7 | §7 | Brand asset check in the gates | §4 | [ ] |
 | 8 | §8 | Changelog and breaking-change rule | -- | [ ] |
+| 9 | §9 | Conformance and smoke checks for any tool | §4 | [ ] |
 
 ## 1. Root CMake Project and Presets
 
@@ -201,6 +202,28 @@ A tool takes SDK changes by bumping a commit hash, so the person bumping needs o
 
 **Test checkpoint:** `python scripts/todo-graph.py validate` exits 0, and `CHANGELOG.md` names commit `cae686b` as its oldest entry.
 
+## 9. Conformance and Smoke Checks for Any Tool
+
+Resolute's `scripts/conformance-check.py` (the profile every shipped tool is measured against) and `scripts/smoke-run.py` (start each built tool, drive it, read it back) are written around exactly two targets inside one tree: the launcher and `extensions/RegStudio`, with their self-tests naming RegStudio throughout. Every tool is now its own repository, so the checks have to work on one tool in its own tree, and they belong here, where every tool can run them from `sdk/`. Until this lands RegStudio cannot leave Resolute without turning its gates red, which is why its move stopped at steps 2 and 3 on 2026-11-16.
+
+**Phase:** 1
+**Needs:** windows-host, display-session
+**Surface:** no
+
+**Build order:**
+
+1. Move the two checks and the profile here and make their tool list a file the consumer supplies. Done when: they run against one tool described by a `conformance.json` in the consumer.
+2. Rewrite their self-tests around a fixture tool. Done when: no self-test names RegStudio or the launcher.
+
+- [ ] Move `scripts/conformance-check.py`, `scripts/profile-check.py` and `docs/conformance-profile.md` from Resolute to the same paths here. Done when: `python scripts/profile-check.py --self-test` passes here. Cheaper substitute: copying them, which leaves two profiles.
+- [ ] Replace the built-in tool table of `scripts/conformance-check.py` with a `conformance.json` read from the consumer's root: the tool's name, target, source directory, executable and shipped files. Done when: the check runs for a consumer with one tool and for Resolute with only the launcher. Cheaper substitute: adding each tool to a table here, which makes the SDK know every tool.
+- [ ] Move `scripts/smoke-run.py`, `scripts/smoke_fixture.py` and `tools/elevated-smoke.ps1` here, reading the same `conformance.json`. Done when: a smoke run of one tool from its own repository starts it, drives it and writes its report.
+- [ ] Rewrite the self-tests of both scripts around a fixture tool built in the test, never a real one. Done when: `git grep -n RegStudio scripts` here prints nothing and both self-tests pass, and each fails when its fixture is broken.
+- [ ] Give Resolute a `conformance.json` naming the launcher alone, remove the moved scripts there and bump its `sdk.json`, in one Resolute commit. Done when: Resolute's `check-all` is green on GitHub with no RegStudio target in `todo/.tidy-baseline`.
+- [ ] Finish RegStudio's move: step 1 of `docs/plans/2026-11-15-app-split.md` in Resolute for row 8, with its own `conformance.json`. Done when: `extensions/` is gone from Resolute and RegStudio's repository carries its sources.
+- [ ] Commit: `gates: conformance and smoke checks that run on any one tool`
+
+**Test checkpoint:** `python scripts/conformance-check.py --self-test` and `python scripts/smoke-run.py --self-test` pass here with no real tool named, and Resolute's `gates` workflow is green with the launcher as its only conformance target.
 ## Verification
 
 - A clean clone bootstraps, builds both configurations, passes its tests and passes `pwsh scripts/check-all.ps1`, and the `gates` workflow is green for the same commit.
