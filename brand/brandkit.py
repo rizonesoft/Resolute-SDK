@@ -53,6 +53,18 @@ def text_width(text: str, font: str, size: float, tracking_em: float = 0.0) -> f
     return (face.getlength(text) / 1000 + tracking_em * len(text)) * size
 
 
+def wrapped(text: str, font: str, size: float, width: float) -> list[str]:
+    """`text` broken at spaces into lines no wider than `width`."""
+    lines, line = [], ""
+    for word in text.split():
+        trial = f"{line} {word}".strip()
+        if line and text_width(trial, font, size) > width:
+            lines.append(line)
+            line = word
+        else:
+            line = trial
+    return lines + [line] if line else lines
+
 def name_text(name: str, x: float, baseline: float, size: float, ink: str) -> tuple[str, float]:
     """The name in Sora Bold. Returns the markup and its width."""
     markup = (f'<text x="{x:.1f}" y="{baseline:.1f}" font-family="Sora" font-weight="700" font-size="{size}" '
@@ -99,10 +111,15 @@ def app_assets(slug: str, name: str, tagline: str, large: str, small: str, socia
     banner = svg(1280, 320, f'<rect width="1280" height="320" fill="{GRAPHITE}"/>' + placed(large, 72, 76, 168) + text
                  + f'<text x="282" y="214" font-family="Inter" font-size="22" fill="{MUTED_ON_DARK}">{tagline}</text>',
                  f"{name}. {tagline}")
-    text, _ = name_text(name, 96, 280, 104, PAPER)
-    social = svg(1280, 640, f'<rect width="1280" height="640" fill="{social_ground}"/>' + text
-                 + f'<text x="98" y="350" font-family="Inter" font-size="30" fill="{social_muted}">{tagline}</text>'
-                 + f'<text x="98" y="420" font-family="Inter" font-size="20" fill="{social_muted}">A Resolute tool by Rizonesoft</text>'
+    # The tagline wraps inside the column left of the icon: one long line ran under the icon on the first tool built.
+    lines = wrapped(tagline, "Inter-Regular.ttf", 30, 640)
+    top = 280 if len(lines) == 1 else 258
+    text, _ = name_text(name, 96, top, 104, PAPER)
+    rows = "".join(f'<text x="98" y="{top + 70 + 42 * index}" font-family="Inter" font-size="30" fill="{social_muted}">{line}</text>'
+                   for index, line in enumerate(lines))
+    credit_y = top + 70 + 42 * len(lines) + 28
+    social = svg(1280, 640, f'<rect width="1280" height="640" fill="{social_ground}"/>' + text + rows
+                 + f'<text x="98" y="{credit_y}" font-family="Inter" font-size="20" fill="{social_muted}">A Resolute tool by Rizonesoft</text>'
                  + placed(large, 800, 136, 368), f"{name}. {tagline}")
     sources = {f"{slug}-wordmark-light.svg": wordmark(GRAPHITE), f"{slug}-wordmark-dark.svg": wordmark(PAPER),
                "readme-banner.svg": banner, "social-preview.svg": social}
