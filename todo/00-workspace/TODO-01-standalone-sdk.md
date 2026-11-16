@@ -18,6 +18,7 @@ title: "TODO-01 -- The SDK builds, tests and gates itself"
 - `D:\Resolute\tests\` at `840bac79`: the Catch2 suite, its fixtures, goldens and focus guard, and `D:\Resolute\scripts\check-all.ps1`, `build.ps1` and `tidy-ratchet.py`: the proven shapes this file adapts instead of inventing.
 - `DESIGN.md` section 15 and `brand/build.py`: the asset check §7 wires into the gates.
 - -> XREF: D01 T01 §3 -- the goldens that file re-captures run in the suite §3 moves here
+- -> XREF: D02 T01 §1 -- the framework plan that section authors owns the crash handler that explains a hardening trap (§10) to the user
 
 ## Outcome
 
@@ -42,6 +43,8 @@ title: "TODO-01 -- The SDK builds, tests and gates itself"
 | 7 | §7 | Brand asset check in the gates | §4 | [ ] |
 | 8 | §8 | Changelog and breaking-change rule | -- | [ ] |
 | 9 | §9 | Conformance and smoke checks for any tool | §4 | [ ] |
+| 10 | §10 | Memory-safety hardening policy for every build | §4, §8 | [ ] |
+| 11 | §11 | AddressSanitizer preset and instrumentation probe | §10 | [ ] |
 
 ## 1. Root CMake Project and Presets
 
@@ -224,6 +227,58 @@ Resolute's `scripts/conformance-check.py` (the profile every shipped tool is mea
 - [ ] Commit: `gates: conformance and smoke checks that run on any one tool`
 
 **Test checkpoint:** `python scripts/conformance-check.py --self-test` and `python scripts/smoke-run.py --self-test` pass here with no real tool named, and Resolute's `gates` workflow is green with the launcher as its only conformance target.
+
+## 10. Memory-Safety Hardening Policy
+
+No policy file sets a memory-safety option today: `cmake/ResoluteSdk.cmake` applies the platform, link, job-pool and warning policies and nothing else. Measured on 2026-11-16 with the pinned compiler (`reskit/llvm-mingw`, clang 23.1.1, `x86_64-w64-windows-gnu`, `-std=c++23 -O2 -static`) on probe programs outside this repository: an out-of-bounds `std::vector` read returned garbage and exited 0 in a plain build, and ended the process with exit `0xC000001D` (illegal instruction, libc++'s trap) under `-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST` with no change in executable size; `-fstack-protector-strong`, `-D_FORTIFY_SOURCE=2` and `-ftrivial-auto-var-init=zero` each built and linked statically; `-mguard=cf` set `IMAGE_DLL_CHARACTERISTICS_GUARD_CF` with 329 functions in the guard table for 1.5 KB; `-Wl,--cetcompat` was refused by the linker (`lld: error: unknown argument`) and `-Wl,-Xlink=-cetcompat` set `IMAGE_DLL_CHARACTERISTICS_EX_CET_COMPAT`; address-space randomisation, high-entropy addresses and no-execute were already on. This section puts those options in one policy file every consumer gets through the include it already has. Unlike the warning policy it is applied to the whole build, fetched dependencies included, because hardening emits no diagnostics a dependency could fail on. It covers bounds and control-flow integrity only: a dangling pointer or reference is caught by §11's sanitizer in tests, never in a shipped binary. A trap ends the tool at once, so the user needs the crash handler D02 T01 §1 plans; this section must not ship a handler of its own.
+
+**Phase:** 1
+**Needs:** windows-host
+**Surface:** no
+
+**Build order:**
+
+1. Write `cmake/ResoluteHardening.cmake` and include it from `cmake/ResoluteSdk.cmake`. Done when: every compile command in `build/release/compile_commands.json` carries the options.
+2. Prove the trap with a probe under `tests/hardening/` and the image flags with `scripts/hardening-check.py`. Done when: each fails with its option removed.
+3. Record what a consumer observes in `docs/hardening.md` and `CHANGELOG.md`. Done when: both name the options and the measured cost.
+
+- [ ] Write `cmake/ResoluteHardening.cmake` with the same once-only guard as `cmake/ResoluteLinkPolicy.cmake`, applying in the includer's directory scope `add_compile_definitions(_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_FAST)` and `add_compile_options(-fstack-protector-strong -ftrivial-auto-var-init=zero -mguard=cf)`, with `add_link_options(-mguard=cf)`. Done when: `reskit\cmake\bin\cmake.exe --preset release` exits 0 and `build/release/compile_commands.json` shows all four on a `shared/lucide` source. Cheaper substitute: a per-target function on the shape of `resolute_set_warnings`, which leaves every fetched dependency unhardened.
+- [ ] Add `_FORTIFY_SOURCE=2` for the Release configuration only, through a `$<CONFIG:Release>` generator expression in `cmake/ResoluteHardening.cmake`, because it was measured at `-O2` only. Done when: the Release compile commands carry it, the Debug ones do not, and both configurations build with no new diagnostic.
+- [ ] Add the shadow-stack flag for x86_64 only as `add_link_options(-Wl,-Xlink=-cetcompat)` in `cmake/ResoluteHardening.cmake`, with a comment recording that `-Wl,--cetcompat` is refused by lld's MinGW driver. Done when: `reskit\llvm-mingw\bin\llvm-readobj.exe --coff-debug-directory` on the built test executable prints `IMAGE_DLL_CHARACTERISTICS_EX_CET_COMPAT`.
+- [ ] Include `ResoluteHardening.cmake` from `cmake/ResoluteSdk.cmake`, after `ResoluteLinkPolicy.cmake`. Done when: a consumer that includes only `ResoluteSdk.cmake` gets the options with no line of its own, shown by Resolute's `build/release/compile_commands.json` built against this commit as `sdk/`.
+- [ ] Add `tests/hardening/oob_probe.cpp`, an executable that reads `std::vector<int>` six elements past its end, registered with CTest under the label `hardening` through a `cmake -P` runner that passes only on exit `0xC000001D`. Done when: `reskit\cmake\bin\ctest.exe --preset release -L hardening` passes, and fails when the `_LIBCPP_HARDENING_MODE` line is removed, then it is restored. Cheaper substitute: asserting that the definition is on the command line, which proves nothing about a trap.
+- [ ] Write `scripts/hardening-check.py <executable>`, which runs `reskit/llvm-mingw/bin/llvm-readobj.exe --file-headers --coff-load-config --coff-debug-directory` and requires `DYNAMIC_BASE`, `HIGH_ENTROPY_VA`, `NX_COMPAT`, `GUARD_CF`, a `GuardCFFunctionCount` above 0 and `EX_CET_COMPAT`, naming each one missing and exiting 1. Done when: it exits 0 on the built test executable and exits 1 naming `GUARD_CF` on a probe linked without `-mguard=cf`, covered by `scripts/tests/test_hardening_check.py`. Cheaper substitute: reading the flags from `compile_commands.json`, which says what was asked for and not what the linker wrote.
+- [ ] Add a `hardening` gate to `scripts/check-all.ps1` running the probe label and `scripts/hardening-check.py` on the Release test executable. Done when: `pwsh scripts/check-all.ps1` prints the gate's line and its count rises by one.
+- [ ] Measure the Release test executable's size and the suite's wall time with and without `cmake/ResoluteHardening.cmake`, and write `docs/hardening.md`: each option, what it stops, the two measurements, and that lifetime errors are out of its reach. Done when: the document carries both pairs of numbers with their date.
+- [ ] Add a `CHANGELOG.md` entry naming this commit: every build that takes it ends at once on an out-of-bounds standard-library access (exit `0xC000001D`), and a consumer that includes the policy files one by one must include `ResoluteHardening.cmake` or move to `ResoluteSdk.cmake`. Done when: the entry exists and names `docs/hardening.md`.
+- [ ] Commit: `build: one hardening policy every consumer inherits`
+
+**Test checkpoint:** `reskit\cmake\bin\ctest.exe --preset release -L hardening` passes and `python scripts/hardening-check.py` exits 0 on the Release test executable; the probe fails with the `_LIBCPP_HARDENING_MODE` line removed.
+
+## 11. AddressSanitizer Preset and Probe
+
+§10 stops an out-of-bounds library access in a shipped binary and cannot see a dangling pointer. Measured on 2026-11-16 with the pinned compiler: `-fsanitize=address` (at `-O1 -g`, without `-static`) reported `heap-buffer-overflow` and `heap-use-after-free` on two probe programs, each exiting 1, once `reskit/llvm-mingw/x86_64-w64-mingw32/bin` was on `PATH` for `libclang_rt.asan_dynamic-x86_64.dll`; without it the probe did not start (exit `0xC0000135`). Whether it links under the `-static` link policy was not measured. `-fsanitize=undefined` did not report the same out-of-bounds read, so it is not part of this section. The runtime is a DLL, so a sanitizer build is a test build only and must never be what a tool ships.
+
+**Phase:** 1
+**Needs:** windows-host, display-session
+**Surface:** no
+
+**Build order:**
+
+1. Add the `RESOLUTE_SANITIZE` option to `cmake/ResoluteHardening.cmake` and an `asan` preset to `CMakePresets.json`. Done when: `cmake --preset asan` configures.
+2. Prove the instrumentation with a probe, then run the suite under it. Done when: `ctest --preset asan` passes and the probe fails in an uninstrumented build.
+
+- [ ] Link one probe with `-fsanitize=address` and the three `-static` options of `cmake/ResoluteLinkPolicy.cmake`, and record the result in `docs/hardening.md`. Done when: the document says whether the static policy and the sanitizer can be combined, quoting the linker's output.
+- [ ] Add `RESOLUTE_SANITIZE` (a cache string, empty or `address`; any other value is a `FATAL_ERROR` naming it) to `cmake/ResoluteHardening.cmake`, adding `-fsanitize=address -fno-omit-frame-pointer` to compile and link options. Done when: `-DRESOLUTE_SANITIZE=thread` fails the configure naming the value. Cheaper substitute: a boolean, which cannot refuse a sanitizer nobody measured.
+- [ ] Make `cmake/ResoluteLinkPolicy.cmake` leave out its `-static` options when `RESOLUTE_SANITIZE` is `address`, only if the first step measured that they cannot be combined. Done when: the `asan` test executable links, and a Release build's link line is byte for byte what it was.
+- [ ] Add `asan` configure, build and test presets to `CMakePresets.json`: `RelWithDebInfo`, `RESOLUTE_SANITIZE=address`, binary directory `build/asan`, and the test preset's `PATH` led by `${sourceDir}/reskit/llvm-mingw/x86_64-w64-mingw32/bin`. Done when: `reskit\cmake\bin\cmake.exe --preset asan` and `--build --preset asan` exit 0 from an empty `build/asan`.
+- [ ] Add `tests/hardening/uaf_probe.cpp`, which reads freed heap memory, built only when `RESOLUTE_SANITIZE` is `address` and registered with `PASS_REGULAR_EXPRESSION "AddressSanitizer: heap-use-after-free"`. Done when: `ctest --preset asan -R uaf_probe` passes, and fails when the preset's `RESOLUTE_SANITIZE` is emptied, then it is restored. Cheaper substitute: `WILL_FAIL`, which also passes when the probe fails to start.
+- [ ] Run the whole suite with `reskit\cmake\bin\ctest.exe --preset asan` and fix each report at the line it names in `shared/`, or file it in `todo/findings.md` with `file:line` when it is in a dependency. Done when: the preset passes with every report fixed or filed.
+- [ ] Make `scripts/hardening-check.py` exit 1 when the executable imports `libclang_rt.asan`, read from `llvm-readobj --coff-imports`. Done when: it exits 1 naming the import on the `asan` test executable and 0 on the Release one. Cheaper substitute: trusting that nobody ships the `asan` tree.
+- [ ] Add an `asan` gate to `scripts/check-all.ps1` that builds and tests the preset, run through `bosun run --` where `bosun` is installed. Done when: `pwsh scripts/check-all.ps1` prints the gate's line.
+- [ ] Commit: `tests: the suite runs under AddressSanitizer, proven by a probe`
+
+**Test checkpoint:** `reskit\cmake\bin\ctest.exe --preset asan` passes with `uaf_probe` in its list, and `uaf_probe` fails when `RESOLUTE_SANITIZE` is empty.
 ## Verification
 
 - A clean clone bootstraps, builds both configurations, passes its tests and passes `pwsh scripts/check-all.ps1`, and the `gates` workflow is green for the same commit.

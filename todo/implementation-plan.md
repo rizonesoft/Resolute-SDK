@@ -18,16 +18,18 @@ Sections: 3 | Checklist items: 11
 
 ### Phase 1: The SDK builds, tests and gates itself
 
-Sections: 6 | Checklist items: 31
+Sections: 8 | Checklist items: 50
 
-| Status | Reference  | Deliverable                               | Needs                         | Items |
-| ------ | ---------- | ----------------------------------------- | ----------------------------- | ----- |
-| [ ]    | D00 T01 §1 | Root CMake Project and Presets            | windows-host                  | 5     |
-| [ ]    | D00 T01 §2 | Build Script for the SDK                  | windows-host                  | 5     |
-| [ ]    | D00 T01 §3 | UI Test Suite Moved From Resolute         | windows-host, display-session | 6     |
-| [ ]    | D00 T01 §4 | Gate Script and CI Workflow               | windows-host                  | 5     |
-| [ ]    | D00 T01 §7 | Brand Asset Check in the Gates            | none                          | 3     |
-| [ ]    | D00 T01 §9 | Conformance and Smoke Checks for Any Tool | windows-host, display-session | 7     |
+| Status | Reference   | Deliverable                               | Needs                         | Items |
+| ------ | ----------- | ----------------------------------------- | ----------------------------- | ----- |
+| [ ]    | D00 T01 §1  | Root CMake Project and Presets            | windows-host                  | 5     |
+| [ ]    | D00 T01 §2  | Build Script for the SDK                  | windows-host                  | 5     |
+| [ ]    | D00 T01 §3  | UI Test Suite Moved From Resolute         | windows-host, display-session | 6     |
+| [ ]    | D00 T01 §4  | Gate Script and CI Workflow               | windows-host                  | 5     |
+| [ ]    | D00 T01 §7  | Brand Asset Check in the Gates            | none                          | 3     |
+| [ ]    | D00 T01 §9  | Conformance and Smoke Checks for Any Tool | windows-host, display-session | 7     |
+| [ ]    | D00 T01 §10 | Memory-Safety Hardening Policy            | windows-host                  | 10    |
+| [ ]    | D00 T01 §11 | AddressSanitizer Preset and Probe         | windows-host, display-session | 9     |
 
 ### Phase 2: The design in code
 
@@ -44,11 +46,11 @@ Sections: 6 | Checklist items: 32
 
 ### Phase 3: The framework
 
-Sections: 3 | Checklist items: 15
+Sections: 3 | Checklist items: 16
 
 | Status | Reference  | Deliverable                                       | Needs        | Items |
 | ------ | ---------- | ------------------------------------------------- | ------------ | ----- |
-| [ ]    | D02 T01 §1 | Framework Plan Authored From Resolute's Domain 01 | none         | 6     |
+| [ ]    | D02 T01 §1 | Framework Plan Authored From Resolute's Domain 01 | none         | 7     |
 | [ ]    | D02 T01 §3 | Reference-Data Tooling Moved From Resolute        | windows-host | 5     |
 | [ ]    | D02 T01 §4 | AutoIt Framework Reference Named                  | none         | 4     |
 
@@ -60,6 +62,6 @@ Sections: 1 | Checklist items: 4
 | ------ | ---------- | ------------------------------------------------------- | ----- | ----- |
 | [ ]    | D02 T01 §2 | Repair Contract Plan Authored From Resolute's Domain 02 | none  | 4     |
 
-Progress: 0/19 verified sections, 7 ready to run now.
+Progress: 0/21 verified sections, 7 ready to run now.
 
-Checklist: 0/93 items completed (includes Commit items).
+Checklist: 0/113 items completed (includes Commit items).
