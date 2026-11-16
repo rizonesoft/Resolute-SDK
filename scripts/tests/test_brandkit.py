@@ -35,6 +35,13 @@ class NameFits(unittest.TestCase):
         self.assertEqual([(size, text) for _, size, text in names(assets("Ownership")["social-preview.svg"])], [(104, "Ownership")])
         self.assertEqual([size for _, size, _ in names(assets("Ownership")["readme-banner.svg"])], [64])
 
+class Credit(unittest.TestCase):
+    def test_a_tool_is_credited_to_the_suite_and_the_launcher_passes_its_own_line(self):
+        self.assertIn("A Resolute tool by Rizonesoft", assets("Ownership")["social-preview.svg"].decode("utf-8"))
+        own = brandkit.app_assets("resolute", "Resolute", "One launcher", DRAWING, DRAWING, "#17191E", "#D9D5CC", credit="By Rizonesoft")
+        text = own["social-preview.svg"].decode("utf-8")
+        self.assertIn(">By Rizonesoft<", text)
+        self.assertNotIn("A Resolute tool", text)
 
 if __name__ == "__main__":
     unittest.main()

@@ -97,9 +97,11 @@ def icon_files(slug: str, large: str, small: str) -> dict[str, bytes]:
     return files
 
 
-def app_assets(slug: str, name: str, tagline: str, large: str, small: str, social_ground: str, social_muted: str) -> dict[str, bytes]:
+def app_assets(slug: str, name: str, tagline: str, large: str, small: str, social_ground: str, social_muted: str,
+               credit: str = "A Resolute tool by Rizonesoft") -> dict[str, bytes]:
     """A tool's whole asset set. `large` and `small` are the icon's inner markup on a 96-unit grid, free-standing:
-    no tile behind it, so it must read on a light and on a dark ground by itself (DESIGN.md section 14)."""
+    no tile behind it, so it must read on a light and on a dark ground by itself (DESIGN.md section 14). `credit` is the
+    small line under the tagline of the social preview: the launcher is not "a Resolute tool" and passes its own."""
     big = svg(96, 96, large, f"{name} icon")
     little = svg(96, 96, small, f"{name} icon, small sizes")
     files = icon_files(slug, big, little)
@@ -138,7 +140,7 @@ def app_assets(slug: str, name: str, tagline: str, large: str, small: str, socia
                    for index, line in enumerate(lines))
     credit_y = top + 70 + 42 * len(lines) + 28
     social = svg(1280, 640, f'<rect width="1280" height="640" fill="{social_ground}"/>' + text + rows
-                 + f'<text x="98" y="{credit_y}" font-family="Inter" font-size="20" fill="{social_muted}">A Resolute tool by Rizonesoft</text>'
+                 + f'<text x="98" y="{credit_y}" font-family="Inter" font-size="20" fill="{social_muted}">{credit}</text>'
                  + placed(large, 800, 136, 368), f"{name}. {tagline}")
     sources = {f"{slug}-wordmark-light.svg": wordmark(GRAPHITE), f"{slug}-wordmark-dark.svg": wordmark(PAPER),
                "readme-banner.svg": banner, "social-preview.svg": social}
