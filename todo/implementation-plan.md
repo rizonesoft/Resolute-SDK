@@ -18,7 +18,7 @@ Sections: 3 | Checklist items: 11
 
 ### Phase 1: The SDK builds, tests and gates itself
 
-Sections: 8 | Checklist items: 50
+Sections: 8 | Checklist items: 51
 
 | Status | Reference   | Deliverable                               | Needs                         | Items |
 | ------ | ----------- | ----------------------------------------- | ----------------------------- | ----- |
@@ -28,7 +28,7 @@ Sections: 8 | Checklist items: 50
 | [ ]    | D00 T01 §4  | Gate Script and CI Workflow               | windows-host                  | 5     |
 | [ ]    | D00 T01 §7  | Brand Asset Check in the Gates            | none                          | 3     |
 | [ ]    | D00 T01 §9  | Conformance and Smoke Checks for Any Tool | windows-host, display-session | 7     |
-| [ ]    | D00 T01 §10 | Memory-Safety Hardening Policy            | windows-host                  | 10    |
+| [ ]    | D00 T01 §10 | Memory-Safety Hardening Policy            | windows-host                  | 11    |
 | [ ]    | D00 T01 §11 | AddressSanitizer Preset and Probe         | windows-host, display-session | 9     |
 
 ### Phase 2: The design in code
@@ -64,4 +64,4 @@ Sections: 1 | Checklist items: 4
 
 Progress: 0/21 verified sections, 7 ready to run now.
 
-Checklist: 0/113 items completed (includes Commit items).
+Checklist: 0/114 items completed (includes Commit items).

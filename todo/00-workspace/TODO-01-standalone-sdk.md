@@ -43,7 +43,7 @@ title: "TODO-01 -- The SDK builds, tests and gates itself"
 | 7 | §7 | Brand asset check in the gates | §4 | [ ] |
 | 8 | §8 | Changelog and breaking-change rule | -- | [ ] |
 | 9 | §9 | Conformance and smoke checks for any tool | §4 | [ ] |
-| 10 | §10 | Memory-safety hardening policy for every build | §4, §8 | [ ] |
+| 10 | §10 | Memory-safety hardening policy for every build | §8, §9 | [ ] |
 | 11 | §11 | AddressSanitizer preset and instrumentation probe | §10 | [ ] |
 
 ## 1. Root CMake Project and Presets
@@ -249,6 +249,7 @@ No policy file sets a memory-safety option today: `cmake/ResoluteSdk.cmake` appl
 - [ ] Add `tests/hardening/oob_probe.cpp`, an executable that reads `std::vector<int>` six elements past its end, registered with CTest under the label `hardening` through a `cmake -P` runner that passes only on exit `0xC000001D`. Done when: `reskit\cmake\bin\ctest.exe --preset release -L hardening` passes, and fails when the `_LIBCPP_HARDENING_MODE` line is removed, then it is restored. Cheaper substitute: asserting that the definition is on the command line, which proves nothing about a trap.
 - [ ] Write `scripts/hardening-check.py <executable>`, which runs `reskit/llvm-mingw/bin/llvm-readobj.exe --file-headers --coff-load-config --coff-debug-directory` and requires `DYNAMIC_BASE`, `HIGH_ENTROPY_VA`, `NX_COMPAT`, `GUARD_CF`, a `GuardCFFunctionCount` above 0 and `EX_CET_COMPAT`, naming each one missing and exiting 1. Done when: it exits 0 on the built test executable and exits 1 naming `GUARD_CF` on a probe linked without `-mguard=cf`, covered by `scripts/tests/test_hardening_check.py`. Cheaper substitute: reading the flags from `compile_commands.json`, which says what was asked for and not what the linker wrote.
 - [ ] Add a `hardening` gate to `scripts/check-all.ps1` running the probe label and `scripts/hardening-check.py` on the Release test executable. Done when: `pwsh scripts/check-all.ps1` prints the gate's line and its count rises by one.
+- [ ] Add the image flags to `docs/conformance-profile.md` as a clause and make `scripts/conformance-check.py` run `scripts/hardening-check.py` on the executable a consumer's `conformance.json` names, so the launcher and every tool are held to it with no line in their own plans. Done when: the conformance self-test's fixture tool passes the clause and fails it when the fixture is linked without `-mguard=cf`. Cheaper substitute: a hardening step written into each tool's plan, which is 79 copies that drift.
 - [ ] Measure the Release test executable's size and the suite's wall time with and without `cmake/ResoluteHardening.cmake`, and write `docs/hardening.md`: each option, what it stops, the two measurements, and that lifetime errors are out of its reach. Done when: the document carries both pairs of numbers with their date.
 - [ ] Add a `CHANGELOG.md` entry naming this commit: every build that takes it ends at once on an out-of-bounds standard-library access (exit `0xC000001D`), and a consumer that includes the policy files one by one must include `ResoluteHardening.cmake` or move to `ResoluteSdk.cmake`. Done when: the entry exists and names `docs/hardening.md`.
 - [ ] Commit: `build: one hardening policy every consumer inherits`
