@@ -99,9 +99,9 @@ Reference data (BIOS beep codes first) is authored in a database, exported to co
 
 **Test checkpoint:** `python scripts/refdata-embed.py --self-test` and `python scripts/refdata-verify.py --self-test` pass here, and Resolute's refdata test label passes against the bumped pin.
 
-## 4. AutoIt Framework Reference Moved From Resolute
+## 4. AutoIt Framework Reference Named
 
-Every ported tool is measured against its AutoIt original, and every original includes the shared AutoIt framework: `ReBar`, the shared includes and the shared resources. Each port carries its own tool's source under `reference/au3/`; the shared part is one thing and lives once, here.
+Every ported tool is measured against its AutoIt original, and every original includes the shared AutoIt framework: `ReBar`, the shared includes and the shared resources. Each port carries its own tool's source under `reference/au3/`; the shared part lives once. It was to be copied here. The operator decided otherwise on 2026-11-16: this repository is public and MIT, and the AutoIt tree is GPL with four community includes of unknown licence, so the whole AutoIt suite went to the private `rizonesoft/Resolute-Classic` (`D:\Resolute-Classic`), byte for byte from Resolute at `8fca9fbf`, and no copy is kept here. Resolute keeps the launcher's and the framework's AutoIt source under `resolute_au3/` as its own specification.
 
 **Phase:** 3
 **Needs:** none
@@ -109,15 +109,14 @@ Every ported tool is measured against its AutoIt original, and every original in
 
 **Build order:**
 
-1. Move the shared AutoIt tree to `reference/au3-sdk/` after the last AutoIt tool has left Resolute. Done when: Resolute has no `resolute_au3/`.
+1. Record in `docs/layer-plans.md` where the AutoIt framework reference is read and how it is cited. Done when: `docs/layer-plans.md` names Resolute-Classic and its five framework folders.
 
-- [ ] Move `resolute_au3/SDK/Includes/`, `SDK/UDF/`, `SDK/Templates/`, `SDK/Resources/` (without the per-tool icons that left with their tools) and `SDK/Concrete/ReBar/` to `reference/au3-sdk/` with a `MOVED-FROM.tsv` map. Done when: every file's hash equals its source's, quoted as a count. Cheaper substitute: moving only `ReBar.au3`, which leaves the includes it needs behind.
-- [ ] Review `resolute_au3/SDK/Signing/` before it moves: confirm it holds no certificate or password. Done when: `docs/layer-plans.md` records what the folder holds by file name and type, never by content, and anything secret is left out and reported to the owner.
-- [ ] Write `reference/au3-sdk/README.md`: what this is, that it is frozen, and that it is read for what the suite did, never ported line by line where a community UDF's licence is unknown (`CompInfo.au3`, `FFLabels.au3`, `GUICtrlFFLabel.au3`, `SSLG.au3`). Done when: the file names those four and the rule.
-- [ ] Remove `resolute_au3/` from Resolute once the split tracker shows no AutoIt tool left there. Done when: `git ls-files resolute_au3` in Resolute prints nothing and its plan gates pass.
-- [ ] Commit: `reference: the AutoIt framework, frozen, as the ports' shared specification`
+- [ ] Record in `docs/layer-plans.md` where the shared AutoIt framework is read: `SDK/Includes/`, `SDK/UDF/`, `SDK/Templates/`, `SDK/Resources/` and `SDK/Concrete/ReBar/` of Resolute-Classic, cited as path and line at that repository's commit. Done when: the file names the repository, the five folders and the citation form, and says no copy exists here and why. Cheaper substitute: a sentence in a commit message, which a later session cannot find.
+- [ ] State the licence rule beside it: the AutoIt source is read for what the suite did, never ported line by line where a community include's licence is unknown (`CompInfo.au3`, `FFLabels.au3`, `GUICtrlFFLabel.au3`, `SSLG.au3`), and nothing GPL is copied into this repository. Done when: the file names those four and the rule.
+- [ ] Record that `SDK/Signing/` is in neither repository: it held a test certificate with its private key, left out of Resolute-Classic and removed from Resolute's tree on 2026-11-16, and still visible in Resolute's public history. Done when: the file says so by file name and type, never by content, and says nothing is ever signed with that certificate.
+- [ ] Commit: `reference: where the AutoIt framework is read, and why it is not copied here`
 
-**Test checkpoint:** `python scripts/todo-graph.py validate` exits 0, `reference/au3-sdk/MOVED-FROM.tsv` lists every moved file, and `git ls-files resolute_au3` in Resolute is empty.
+**Test checkpoint:** `python scripts/todo-graph.py validate` exits 0, and `docs/layer-plans.md` names Resolute-Classic, the five folders, the citation form, the four includes and the Signing folder.
 
 ## Verification
 

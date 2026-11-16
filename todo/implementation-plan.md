@@ -44,13 +44,13 @@ Sections: 6 | Checklist items: 32
 
 ### Phase 3: The framework
 
-Sections: 3 | Checklist items: 16
+Sections: 3 | Checklist items: 15
 
 | Status | Reference  | Deliverable                                       | Needs        | Items |
 | ------ | ---------- | ------------------------------------------------- | ------------ | ----- |
 | [ ]    | D02 T01 §1 | Framework Plan Authored From Resolute's Domain 01 | none         | 6     |
 | [ ]    | D02 T01 §3 | Reference-Data Tooling Moved From Resolute        | windows-host | 5     |
-| [ ]    | D02 T01 §4 | AutoIt Framework Reference Moved From Resolute    | none         | 5     |
+| [ ]    | D02 T01 §4 | AutoIt Framework Reference Named                  | none         | 4     |
 
 ### Phase 4: The repair contract
 
@@ -62,4 +62,4 @@ Sections: 1 | Checklist items: 4
 
 Progress: 0/19 verified sections, 7 ready to run now.
 
-Checklist: 0/94 items completed (includes Commit items).
+Checklist: 0/93 items completed (includes Commit items).
