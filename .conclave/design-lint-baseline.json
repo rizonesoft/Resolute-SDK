@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "counts": {
+    "shared/resolute-ui/include/resolute/animation.h": {
+      "color-literal": 1
+    },
+    "shared/resolute-ui/src/controls/contentview.cpp": {
+      "color-literal": 3,
+      "spacing-radius-literal": 2
+    },
+    "shared/resolute-ui/src/controls/listview.cpp": {
+      "color-literal": 1
+    },
+    "shared/resolute-ui/src/controls/popupmenu.cpp": {
+      "color-literal": 1
+    },
+    "shared/resolute-ui/src/controls/sidebar.cpp": {
+      "color-literal": 12,
+      "spacing-radius-literal": 9
+    },
+    "shared/resolute-ui/src/controls/statusbar.cpp": {
+      "spacing-radius-literal": 1
+    },
+    "shared/resolute-ui/src/controls/toolbar.cpp": {
+      "color-literal": 3,
+      "spacing-radius-literal": 5
+    },
+    "shared/resolute-ui/src/theme.cpp": {
+      "color-literal": 52
+    }
+  },
+  "history": [
+    {
+      "at": "2026-11-17T07:41:50Z",
+      "reason": "Initial shrink-only baseline on design-lint rollout",
+      "added": {
+        "shared/resolute-ui/include/resolute/animation.h:color-literal": 1,
+        "shared/resolute-ui/src/controls/contentview.cpp:color-literal": 3,
+        "shared/resolute-ui/src/controls/contentview.cpp:spacing-radius-literal": 2,
+        "shared/resolute-ui/src/controls/listview.cpp:color-literal": 1,
+        "shared/resolute-ui/src/controls/popupmenu.cpp:color-literal": 1,
+        "shared/resolute-ui/src/controls/sidebar.cpp:color-literal": 12,
+        "shared/resolute-ui/src/controls/sidebar.cpp:spacing-radius-literal": 9,
+        "shared/resolute-ui/src/controls/statusbar.cpp:spacing-radius-literal": 1,
+        "shared/resolute-ui/src/controls/toolbar.cpp:color-literal": 3,
+        "shared/resolute-ui/src/controls/toolbar.cpp:spacing-radius-literal": 5,
+        "shared/resolute-ui/src/theme.cpp:color-literal": 52
+      }
+    }
+  ]
+}
