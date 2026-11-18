@@ -14,7 +14,9 @@ title: "TODO-01 -- One installer shape for every Windows program"
 
 ## Inputs
 
-- `DESIGN.md`: the suite's design contract; §2 adds the installer frame to it.
+- `DESIGN.md`: the suite's design contract; section 17 is the installer contract §2 recorded, exact to the unit.
+- `docs/captures/installer/reference/`: `make_reference.py`, the reference implementation of section 17, and the PNGs and `.ico` it writes for MemBoost, Firemin and Sleep and Wake Diagnostics. §3 and §4 must reproduce them pixel for pixel.
+- `docs/installer.md`: the adoption guide; each section below updates the part it builds.
 - `brand/brandkit.py`: the asset builder every repository runs; §3 and §4 extend it.
 - `toolchain.json` and `scripts/bootstrap.ps1`: the pin format and the hash-checked download that §1 follows.
 - `D:\Resolute-Classic\Resolute_setup.iss`: prior art for directives and messages only; nothing is copied without reading it.
@@ -97,7 +99,8 @@ The operator approves design in session, by multiple choice with the recommendat
 - [x] Capture every page of each candidate for MemBoost and one more tool in light and dark to `docs/captures/installer/`. Done when: the boards exist with their provenance.
 - [x] Ask the operator which frame, in session, recommendation first. Done when: the answer is recorded in this section's body with the date and `owner-decision` is removed from Needs.
 - [x] Write the chosen frame into `DESIGN.md` with exact image sizes per DPI read from the Inno Setup help for the pinned version. Done when: `python scripts/design-lint.py` passes on it.
-- [ ] Commit: `design: the installer frame`
+- [x] Make section 17 exact enough to build 1:1: geometry, the long-name and credit fitting rules, the per-size viewBox, badge geometry, file names and the `[Setup]` block, with a reference renderer and reference PNGs. Done when: the references render at every listed size with no pixel off, and the longest name (Sleep and Wake Diagnostics) fits on two lines.
+- [x] Commit: `design: the installer frame`
 
 **Test checkpoint:** `python scripts/design-lint.py` exits 0 and `DESIGN.md` contains the installer section naming every image directive and size the boards used.
 
@@ -117,9 +120,9 @@ The wizard images come out of `brandkit.py` like every other brand asset, so a t
 
 1. Add an installer target to `brand/brandkit.py`. Done when: a run writes `brand/installer/` with every image §2 names, in both themes and every listed scale.
 
-- [ ] Add `build_installer_images()` to `brand/brandkit.py` rendering the side panel and the square header icon at every image-area size `DESIGN.md` section 17 lists, from the tool's SVG icon with `resvg_py`, and set `WizardImageStretch=no` in §6. Done when: `brand/installer/` holds every file at its exact pixel size and a capture at 150% shows the icon with the same aspect ratio as its source. Cheaper substitute: three sizes left to Setup to stretch, which blurred and distorted the icon in the first board (operator, 2026-11-18).
-- [ ] Take the accent from the tool's brand spec, not a literal in the builder. Done when: two tools with different accents produce different back images.
-- [ ] Add `scripts/tests/test_brandkit_installer.py` checking each file's presence and size for a fixture tool. Done when: it passes, and fails when a size in §2 changes without the builder.
+- [ ] Port the side panel and header icon from `docs/captures/installer/reference/make_reference.py` into `brand/brandkit.py`, called from `app_assets` so `build.py` and `build.py --check` cover `brand/installer/` (`DESIGN.md` 17.2, 17.3, 17.6), with one SVG per size on its own viewBox (17.2) and `WizardImageStretch=no` in §6. Done when: `brand/installer/` holds every file at its exact listed pixel size. Cheaper substitute: three sizes left to Setup to stretch, which blurred and distorted the icon in the first board (operator, 2026-11-18), or one 164 by 314 drawing scaled by width, which comes out a pixel tall at five of the seven sizes.
+- [ ] Add an `accent` argument to `app_assets` (`DESIGN.md` 17.4), falling back to the first colour of the detailed drawing. Done when: MemBoost and Firemin get `#0284C7` and `#EA580C` with no `accent` given, and a given `accent` wins.
+- [ ] Add `scripts/tests/test_brandkit_installer.py` comparing brandkit's side panels and header icons for the three reference tools with the reference PNGs pixel for pixel, checking every size, and checking a three-line name fails by name. Done when: it passes, and fails when one unit of 17.2 changes in the builder without the references.
 - [ ] Commit: `brand: installer images from each tool's brand`
 
 **Test checkpoint:** `python -m unittest scripts.tests.test_brandkit_installer` passes and fails when one image size is altered.
@@ -131,7 +134,7 @@ The setup file must not look like the program in a Downloads folder. A small bad
 **Phase:** 5
 **Needs:** none
 **Surface:** yes
-**Fidelity:** `brand/installer/<tool>-setup.ico` at 16, 24, 32, 48, 64 and 256 px, beside `brand/<tool>.ico` in Explorer.
+**Fidelity:** `brand/installer/<tool>-setup.ico` at every `brandkit.ICO_SIZES` frame (16 to 256 px), beside `brand/<tool>.ico` in Explorer.
 **Job:** a person tells the setup file from the program at a glance. Consumer: `SetupIconFile` in §6.
 **Treatment:** the tool icon with the badge §2 approves, rendered per size. Cheaper substitute that fails: the plain tool icon.
 **Chrome:** none.
@@ -140,8 +143,8 @@ The setup file must not look like the program in a Downloads folder. A small bad
 
 1. Add a setup-icon target to `brand/brandkit.py`. Done when: it writes `<tool>-setup.ico` with every listed size.
 
-- [ ] Add the badge as one shared SVG in `brand/installer-badge.svg` and composite it per size in `brandkit.py`. Done when: the 16 px frame keeps the badge legible. Cheaper substitute: scaling the 256 px frame down, which loses the badge at 16 px.
-- [ ] Add the size and frame-count check to `scripts/tests/test_brandkit_installer.py`. Done when: it fails if a size is missing.
+- [ ] Port badge 1 from the reference script into `brandkit.py` with the geometry in `DESIGN.md` 17.5, drawn per frame on the detailed or small drawing. Done when: the 16 px frame keeps the badge legible. Cheaper substitute: scaling the 256 px frame down, which loses the badge at 16 px.
+- [ ] Add the setup icon to `scripts/tests/test_brandkit_installer.py`: every `ICO_SIZES` frame present, and the 256, 32 and 16 px frames equal to the reference `setup-<size>.png` pixel for pixel. Done when: it fails if a size is missing or the badge moves.
 - [ ] Commit: `brand: setup icon with the setup badge`
 
 **Test checkpoint:** `python -m unittest scripts.tests.test_brandkit_installer` passes with a case reading every frame size from the `.ico`.
@@ -183,7 +186,7 @@ One `.iss` in the SDK, driven by defines from `installer.json` and the brand ima
 2. Prove install and uninstall on the host. Done when: a test reads back every file, shortcut and registry value and finds none after uninstall.
 
 - [ ] Write `installer/Resolute.iss` taking `AppName`, `AppId`, `AppVersion`, `AppExe` and the image paths as `/D` defines. Done when: `ISCC.exe --messages-jsonl` compiles it for the fixture with no warning entries. Cheaper substitute: a per-tool copy of the script.
-- [ ] Set the `[Setup]` frame directives from the `DESIGN.md` installer section. Done when: the built wizard matches the §2 board in light and dark.
+- [ ] Set the `[Setup]` frame directives exactly as `DESIGN.md` 17.1 lists them, and only those. Done when: a capture of the fixture wizard at 100% and 200% shows the side panel equal to its `side-202.png` and `side-430.png` pixel for pixel (17.8), in light and dark.
 - [ ] Set `SetupArchitecture=x64` so Setup is 64-bit and `ArchitecturesAllowed` and `ArchitecturesInstallIn64BitMode` default to `x64compatible` (7.0.0, help: `SetupArchitecture`), with no Pascal use of the removed `EnableFsRedirection`. Done when: the uninstall key is written to the 64-bit view and `Setup.exe` is a PE32+ image. Cheaper substitute: a 32-bit Setup relying on file-system redirection.
 - [ ] Add `scripts/tests/test_installer_roundtrip.py` installing the fixture silently into a temp per-user location, reading back files, the shortcut and the `Uninstall\<AppId>_is1` key, then uninstalling and checking each is gone, with every started process tree killed on timeout. Done when: it passes, and fails if the uninstaller leaves the executable.
 - [ ] Commit: `installer: the shared Inno Setup script`
@@ -266,7 +269,7 @@ Scripted and fleet installs need every mode to run with no window and a meaningf
 
 1. Document and test the switch set. Done when: `docs/installer.md` lists each switch and the tests run each one.
 
-- [ ] Write `docs/installer.md` listing `/VERYSILENT`, `/SUPPRESSMSGBOXES`, `/NORESTART`, `/CURRENTUSER`, `/ALLUSERS`, `/DIR=`, `/PORTABLE=1`, `/LOG=` and the uninstaller's `/VERYSILENT`, with exit codes, citing the Inno Setup help. Done when: every switch in the file is exercised by a test.
+- [ ] Complete the switch table in `docs/installer.md` (it lists `/VERYSILENT`, `/SUPPRESSMSGBOXES`, `/NORESTART`, `/CURRENTUSER`, `/ALLUSERS`, `/DIR=`, `/PORTABLE=1`, `/LOG=`, `/ALLOWDOWNGRADE` and the uninstaller's switches) with exit codes, citing the Inno Setup help, and drop its "nothing is built yet" status line once §15 lands. Done when: every switch in the file is exercised by a test.
 - [ ] Add silent cases to `scripts/tests/test_installer_roundtrip.py` checking exit code 0 and no visible window. Done when: they pass.
 - [ ] Commit: `installer: silent switches documented and proven`
 
@@ -372,7 +375,7 @@ One real tool goes through the whole shape before the other programs adopt it.
 1. Adopt the shape in MemBoost. Done when: `scripts/package.ps1` in MemBoost writes a setup, and each mode works on the host.
 
 - [ ] Add `installer.json` to `D:\Resolute_Bin\MemBoost` and bump its `sdk.json` to the SDK commit carrying §1 to §14. Done when: `pwsh scripts/package.ps1` writes `dist/MemBoost-<version>-Setup.exe`.
-- [ ] Install, upgrade, run portable, and uninstall MemBoost, capturing each wizard page in light and dark to `docs/captures/installer/memboost/`. Done when: the captures match the §2 frame.
+- [ ] Install, upgrade, run portable, and uninstall MemBoost, capturing each wizard page in light and dark to `docs/captures/installer/memboost/`. Done when: the captures pass the `DESIGN.md` 17.8 check.
 - [ ] Show the operator the captures. Done when: their approval or changes are recorded here with the date.
 - [ ] Commit: `installer: MemBoost pilot`
 

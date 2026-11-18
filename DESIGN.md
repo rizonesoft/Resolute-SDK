@@ -250,7 +250,7 @@ Those windows are not DPI-aware, have no dark mode, and predate every rule in th
 Each tool's icon is its own: full colour, drawn for that tool in its own repository, and never a Lucide glyph. Decided by the operator on 2026-11-15: the icons are not set on a shared tile. What they share is how they are constructed, so eighty of them read as one family in a taskbar without looking alike.
 
 - **Free-standing.** The object is the silhouette. There is no rounded-square tile, plate or badge behind it, and each tool's outline is its own. The drawing fills an 80-unit box centred on a 96-unit grid.
-- **Its own object.** The picture is the thing the tool acts on or the result it produces, chosen so it is recognisable without the name: a keyhole shield for Ownership, a drive for Drive Repair. Not an abstract mark, and not a letter. One exception is approved: Busview's mark is the letter B drawn as a chip package (operator, 2026-11-17).
+- **Its own object.** The picture is the thing the tool acts on or the result it produces, chosen so it is recognisable without the name: a keyhole shield for Ownership, a drive for Drive Repair. Not an abstract mark, and not a letter. One exception is approved: one private product's mark is its initial drawn as a chip package (operator, 2026-11-17).
 - **Its own colour.** Each tool has one signature hue in two or three tones (light face, mid face, dark face) and at most one second hue as a highlight. Amber is the SDK's and the launcher's and is not a tool's signature hue.
 - **One construction.** No outlines and no drop shadows. Depth comes from faces lit from the upper left: the face toward the light is the lightest tone, and a face may carry a gradient within the tool's hue. Every corner is rounded, three units at least, so no edge reads as sharp. (The earlier "flat faces, no gradients" rule was removed by the operator on 2026-11-17.)
 - **Legible on both grounds.** With no tile, the icon sits directly on a light or a dark taskbar. Its tones stay in the middle of the lightness range (no face darker than `#1F1F1F` or lighter than `#F0F0F0`), and a cut-out shows the ground through it. It is checked on both grounds at 16 pixels before it ships.
@@ -320,11 +320,82 @@ A tool's own `DESIGN.md` lists its sections and says what the first one shows. I
 
 Decided by the operator on 2026-11-18 from real Inno Setup 7.1.1 wizards for MemBoost and Firemin, three frames and three badges: frame A, "Graphite panel", and badge 1, "Graphite arrow". Every program's installer is the same frame; only its icon, name, accent and credit change. All of it is written by `brandkit.py` from the program's `brand/build.py`, never drawn by hand (D03 T01 §3 and §4).
 
-- **Style.** `WizardStyle=modern dynamic windows11`: the wizard follows the Windows light or dark setting, on Inno Setup's Windows 11 style.
-- **Side panel** (`WizardImageFile`, Welcome and Finished pages). Graphite `#17191E` in both themes, with a radial glow of the program's signature colour at 38% opacity centred a third of the way down. The detailed icon is centred in the upper half at 104 units on the 164 by 314 grid. The name is in Sora Bold in Paper `#F6F5F2` under it, with a 40 by 3 unit rule in the signature colour. The credit is in Inter in `#C3C7CF` at the foot: "A Resolute tool by Rizonesoft", or the program's own credit as `app_assets` takes it. Rendered at every image-area size the Inno Setup 7.1.1 help lists, 202 by 386 at 100% to 534 by 1022 at 250%, and listed together with `WizardImageStretch=no`, so Setup shows each one at its own pixels and an icon is never stretched out of shape.
-- **Header icon** (`WizardSmallImageFile`, the inner pages). The detailed icon on a transparent ground, square, at every size the help lists: 58, 77, 97, 116, 124, 143 and 159 pixels (100% to 250%).
-- **No background image.** `WizardBackImageFile` stays unset; the page is the style's own ground.
-- **Setup file icon** (`SetupIconFile`). The program's icon with a badge on its lower right: a Graphite disc with a Paper down-arrow, cut out of the icon by a ring of the ground. The disc's radius is 19 units on the 96 grid (22 below 40 pixels, with the small drawing), so the badge stays readable at 16 pixels. This is the one place a badge sits on a program's icon (section 14); the installed program keeps its plain icon, and the Add/Remove Programs entry uses the installed program's icon.
-- **Pages.** Welcome, Ready, Installing and Finished, plus Inno Setup's own install-mode choice. No licence, components or program-group page.
+This section is the contract for a 1:1 build. The reference implementation is `docs/captures/installer/reference/make_reference.py`, and the PNGs it writes beside it are the expected output: `brandkit.py` must produce the same pixels for the same tool. Where this text and the reference disagree, fix whichever is wrong and re-render; never let them drift. `docs/installer.md` is the guide for adopting it.
 
-The comparison board is the artifact the decision was made on; the captures are kept in `docs/captures/installer/`.
+### 17.1 Wizard settings
+
+The frame is these `[Setup]` directives in the shared `installer/Resolute.iss`, and nothing else changes the look:
+
+```
+WizardStyle=modern dynamic windows11
+WizardImageFile=<brand>\installer\<slug>-side-*.png
+WizardSmallImageFile=<brand>\installer\<slug>-small-*.png
+WizardImageStretch=no
+SetupIconFile=<brand>\installer\<slug>-setup.ico
+UninstallDisplayIcon={app}\<exe>
+```
+
+- `modern dynamic windows11` follows the Windows light or dark setting on Inno Setup's Windows 11 style. The same images serve both themes: the side panel is always graphite and the header icon is free-standing (section 14), so there are no `*DynamicDark` image directives.
+- `WizardImageStretch=no` with every size listed: Setup picks the file made for the display scale and shows it at its own pixels. Fewer sizes left Setup to stretch, which squashed the icons on the first board.
+- Unset on purpose: `WizardBackImageFile`, `WizardBackColor`, `WizardImageOpacity`, `WizardImageBackColor` and every colour directive. The style's own ground and controls stay as Inno Setup draws them.
+
+### 17.2 Side panel
+
+`WizardImageFile`, shown on the Welcome and Finished pages. Laid out on a 164 by 314 unit grid:
+
+| Part | Exact value |
+| ---- | ----------- |
+| Ground | Graphite `#17191E`, filling the whole image |
+| Glow | radial gradient over the 164 by 314 box, bounding-box units `cx 0.5`, `cy 0.34`, `r 0.6`; the accent at 0.38 opacity at the centre to 0 at the edge |
+| Icon | the detailed drawing (`large`) at x 30, y 58, 104 units square |
+| Name | Sora Bold, Paper `#F6F5F2`, tracking -0.03 em, centred on x 82, first baseline y 196 |
+| Name size | the largest of 19, 18, 17, 16 and 15 that fits 136 units on one line; otherwise 15 on two lines broken at spaces, pitch 1.2 times the size (18 units). A name that needs three lines fails the build |
+| Rule | 40 by 3 units, corner radius 1.5, the accent, centred, its top 14 units below the name's last baseline |
+| Credit | Inter Regular, `#C3C7CF`, tracking 0.4 units, centred, baseline y 296; size 7.6, or 7.2, 6.8 or 6.4 if needed to fit 136 units. Text: `app_assets`' `credit`, "A Resolute tool by Rizonesoft" by default and "By Rizonesoft" for the launcher |
+
+Rendered at every image-area size the Inno Setup 7.1.1 help lists:
+
+| Scale | 100% | 125% | 150% | 175% | 200% | 225% | 250% |
+| ----- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+| Pixels | 202 x 386 | 269 x 515 | 336 x 643 | 403 x 772 | 430 x 824 | 498 x 953 | 534 x 1022 |
+
+The listed sizes are rounded, so most are not exactly 164:314 (202 by 386 is 0.2% short). Each size gets its own SVG with a viewBox 164 units wide and `164 * height / width` units tall, so the drawing scales by the same factor on both axes and the PNG comes out at exactly the listed pixels. The layout stays on the 164 by 314 grid; only the ground runs to the edge. A render that is a pixel off the listed size fails the build.
+
+### 17.3 Header icon
+
+`WizardSmallImageFile`, shown on the inner pages. The detailed drawing on a transparent ground, square, at 58, 77, 97, 116, 124, 143 and 159 pixels (100% to 250%), rendered from the vector at each size.
+
+### 17.4 Accent
+
+The accent is the tool's signature hue at its mid face (section 14), declared in `brand/build.py` as `app_assets(accent=...)`. Until a tool declares it, the builder takes the first colour in its detailed drawing, which is what the approved boards used (MemBoost `#0284C7`, Firemin `#EA580C`).
+
+### 17.5 Setup file icon
+
+`SetupIconFile`. The program's icon with badge 1 on its lower right, on the 96 grid:
+
+| Part | Detailed drawing (40 px and up) | Small drawing (below 40 px) |
+| ---- | ------------------------------- | --------------------------- |
+| Disc | Graphite `#17191E`, radius 19, centre (76, 76) | radius 22, centre (73, 73) |
+| Knock-out ring | the icon masked out to radius 23 | to radius 27 |
+| Arrow | Paper `#F6F5F2`, path `M0 -9 V7 M-7 1 L0 8 L7 1` scaled by radius / 13 about the centre, stroke 3.8 units, round caps and joins | stroke 4.6 units |
+
+The centre is `96 - radius - 1` on both axes. The `.ico` holds the same frames as the program's own icon (`brandkit.ICO_SIZES`: 16, 20, 24, 32, 40, 48, 64, 96, 128 and 256), each rendered from the vector with the small drawing below 40 pixels, never scaled from another frame. This is the one place a badge sits on a program's icon (section 14). The installed program, its shortcuts and its Add/Remove Programs entry use the plain icon.
+
+### 17.6 Files
+
+`brandkit.py` writes them to `brand/installer/` in each repository, beside the other brand assets and checked by `build.py --check` like them:
+
+- `<slug>-side-<width>.png`, seven files, one per scale.
+- `<slug>-small-<size>.png`, seven files.
+- `<slug>-setup.ico`.
+
+### 17.7 Pages and words
+
+Welcome, the install-mode choice (per user or all users, D03 T01 §7), the Install or Portable choice (D03 T01 §9), Ready, Installing and Finished. No licence, components, directory or program-group page; the directory page appears only for Portable. Every message is Inno Setup's own English text, except the line D03 T01 §17 adds to Welcome when a newer version exists. Nothing is drawn over Inno Setup's controls.
+
+### 17.8 How a build is checked
+
+- `brandkit.py`'s installer output for MemBoost, Firemin and Sleep and Wake Diagnostics equals the reference PNGs pixel for pixel. The references were rendered with resvg_py 0.5.0 and Pillow 12.3.0; a renderer upgrade that moves pixels re-renders the references in the same commit, after a look.
+- A real wizard captured at 100% and 200% shows the side panel at its own pixels: the panel area of the capture equals `side-202.png` or `side-430.png`.
+
+The comparison board the decision was made on and its captures are kept in `docs/captures/installer/`.

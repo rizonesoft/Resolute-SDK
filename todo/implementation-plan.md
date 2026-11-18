@@ -64,12 +64,12 @@ Sections: 1 | Checklist items: 4
 
 ### Phase 5: The installer
 
-Sections: 17 | Checklist items: 70
+Sections: 17 | Checklist items: 71
 
 | Status | Reference   | Deliverable                                       | Needs                         | Items |
 | ------ | ----------- | ------------------------------------------------- | ----------------------------- | ----- |
 | [ ]    | D03 T01 §1  | Inno Setup Pinned in the Toolchain                | windows-host                  | 4     |
-| [ ]    | D03 T01 §2  | Installer Frame Approved in DESIGN.md             | none                          | 5     |
+| [ ]    | D03 T01 §2  | Installer Frame Approved in DESIGN.md             | none                          | 6     |
 | [ ]    | D03 T01 §3  | Wizard Images Built from Each Tool's Brand        | none                          | 4     |
 | [ ]    | D03 T01 §4  | Setup Icon with the Setup Badge                   | none                          | 3     |
 | [ ]    | D03 T01 §5  | Per-Program installer.json Schema                 | none                          | 4     |
@@ -88,4 +88,4 @@ Sections: 17 | Checklist items: 70
 
 Progress: 0/38 verified sections, 11 ready to run now.
 
-Checklist: 4/184 items completed (includes Commit items).
+Checklist: 6/185 items completed (includes Commit items).
