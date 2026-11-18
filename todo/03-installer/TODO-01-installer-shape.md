@@ -79,22 +79,24 @@ The compiler is pinned like every other build tool, so a clean clone builds the 
 The operator approves design in session, by multiple choice with the recommendation first, from comparison boards. This section produces the boards and records the chosen frame in the contract, so §3 and §4 build to a decision rather than a guess.
 
 **Phase:** 5
-**Needs:** owner-decision
+**Needs:** none
 **Surface:** yes
 **Fidelity:** the welcome, ready, progress and finish pages of a real Inno Setup 7.1.1 wizard, light and dark, at 100% and 200% scale.
 **Job:** a person sees which program they are installing and that it belongs to the suite. Consumer: the wizard window.
 **Treatment:** a shared frame (style, background, layout) with the tool's icon, wordmark and accent as the only per-tool parts. Cheaper substitute that fails: one generic image for every tool, which the operator ruled out on 2026-11-18.
 **Chrome:** Inno Setup's own wizard controls and buttons; nothing is drawn over them.
 
+**Decision:** the operator chose frame A, Graphite panel, and setup-icon badge 1, Graphite arrow, on 2026-11-18 from real 7.1.1 wizards for MemBoost and Firemin (captures in `docs/captures/installer/`). `DESIGN.md` section 17 records it.
+
 **Build order:**
 
 1. Render three or four frame candidates on two sample tools as boards in `docs/captures/installer/`. Done when: each board shows all four pages in both themes.
 2. Record the chosen frame as a new `DESIGN.md` section. Done when: it names the `WizardStyle`, every image directive with its pixel sizes per scale, the colours, and which parts come from the tool's brand.
 
-- [ ] Build candidate frames from Inno Setup directives: `WizardStyle` (`modern dynamic` with a built-in style such as `windows11`), `WizardImageFile`, `WizardSmallImageFile`, `WizardBackImageFile`, `WizardBackColor`, their `DynamicDark` forms and `WizardImageOpacity` (all per the 7.1.1 help). Done when: each candidate compiles and runs on the host. Cheaper substitute: mock-ups drawn outside Inno Setup, which do not show what the engine can really do.
-- [ ] Capture every page of each candidate for MemBoost and one more tool in light and dark to `docs/captures/installer/`. Done when: the boards exist with their provenance.
-- [ ] Ask the operator which frame, in session, recommendation first. Done when: the answer is recorded in this section's body with the date and `owner-decision` is removed from Needs.
-- [ ] Write the chosen frame into `DESIGN.md` with exact image sizes per DPI read from the Inno Setup help for the pinned version. Done when: `python scripts/design-lint.py` passes on it.
+- [x] Build candidate frames from Inno Setup directives: `WizardStyle` (`modern dynamic` with a built-in style such as `windows11`), `WizardImageFile`, `WizardSmallImageFile`, `WizardBackImageFile`, `WizardBackColor`, their `DynamicDark` forms and `WizardImageOpacity` (all per the 7.1.1 help). Done when: each candidate compiles and runs on the host. Cheaper substitute: mock-ups drawn outside Inno Setup, which do not show what the engine can really do.
+- [x] Capture every page of each candidate for MemBoost and one more tool in light and dark to `docs/captures/installer/`. Done when: the boards exist with their provenance.
+- [x] Ask the operator which frame, in session, recommendation first. Done when: the answer is recorded in this section's body with the date and `owner-decision` is removed from Needs.
+- [x] Write the chosen frame into `DESIGN.md` with exact image sizes per DPI read from the Inno Setup help for the pinned version. Done when: `python scripts/design-lint.py` passes on it.
 - [ ] Commit: `design: the installer frame`
 
 **Test checkpoint:** `python scripts/design-lint.py` exits 0 and `DESIGN.md` contains the installer section naming every image directive and size the boards used.
@@ -115,7 +117,7 @@ The wizard images come out of `brandkit.py` like every other brand asset, so a t
 
 1. Add an installer target to `brand/brandkit.py`. Done when: a run writes `brand/installer/` with every image §2 names, in both themes and every listed scale.
 
-- [ ] Add `build_installer_images()` to `brand/brandkit.py` rendering the large, small and back images per §2 from the tool's SVG icon and wordmarks with `resvg_py`. Done when: `brand/installer/` holds every file at its exact pixel size. Cheaper substitute: scaling one PNG up, which blurs at 200%.
+- [ ] Add `build_installer_images()` to `brand/brandkit.py` rendering the side panel and the square header icon at every image-area size `DESIGN.md` section 17 lists, from the tool's SVG icon with `resvg_py`, and set `WizardImageStretch=no` in §6. Done when: `brand/installer/` holds every file at its exact pixel size and a capture at 150% shows the icon with the same aspect ratio as its source. Cheaper substitute: three sizes left to Setup to stretch, which blurred and distorted the icon in the first board (operator, 2026-11-18).
 - [ ] Take the accent from the tool's brand spec, not a literal in the builder. Done when: two tools with different accents produce different back images.
 - [ ] Add `scripts/tests/test_brandkit_installer.py` checking each file's presence and size for a fixture tool. Done when: it passes, and fails when a size in §2 changes without the builder.
 - [ ] Commit: `brand: installer images from each tool's brand`

@@ -69,7 +69,7 @@ Sections: 17 | Checklist items: 70
 | Status | Reference   | Deliverable                                       | Needs                         | Items |
 | ------ | ----------- | ------------------------------------------------- | ----------------------------- | ----- |
 | [ ]    | D03 T01 §1  | Inno Setup Pinned in the Toolchain                | windows-host                  | 4     |
-| [ ]    | D03 T01 §2  | Installer Frame Approved in DESIGN.md             | owner-decision                | 5     |
+| [ ]    | D03 T01 §2  | Installer Frame Approved in DESIGN.md             | none                          | 5     |
 | [ ]    | D03 T01 §3  | Wizard Images Built from Each Tool's Brand        | none                          | 4     |
 | [ ]    | D03 T01 §4  | Setup Icon with the Setup Badge                   | none                          | 3     |
 | [ ]    | D03 T01 §5  | Per-Program installer.json Schema                 | none                          | 4     |
@@ -86,6 +86,6 @@ Sections: 17 | Checklist items: 70
 | [ ]    | D03 T01 §15 | MemBoost Pilot, End to End                        | windows-host, display-session | 4     |
 | [ ]    | D03 T01 §16 | Rollout to Every Consumer                         | windows-host                  | 3     |
 
-Progress: 0/38 verified sections, 10 ready to run now.
+Progress: 0/38 verified sections, 11 ready to run now.
 
-Checklist: 0/184 items completed (includes Commit items).
+Checklist: 4/184 items completed (includes Commit items).

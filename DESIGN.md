@@ -315,3 +315,16 @@ Decided by the operator on 2026-11-15, when the first seven tools each chose it 
 - **Graphs** are drawn with the library's chart control, never by a tool. A tool that shows a value over time (memory in use, for example) names the series and the library draws it in the theme's colours, with the values reachable by keyboard and by a screen reader.
 
 A tool's own `DESIGN.md` lists its sections and says what the first one shows. It does not restate this arrangement.
+
+## 17. The installer
+
+Decided by the operator on 2026-11-18 from real Inno Setup 7.1.1 wizards for MemBoost and Firemin, three frames and three badges: frame A, "Graphite panel", and badge 1, "Graphite arrow". Every program's installer is the same frame; only its icon, name, accent and credit change. All of it is written by `brandkit.py` from the program's `brand/build.py`, never drawn by hand (D03 T01 §3 and §4).
+
+- **Style.** `WizardStyle=modern dynamic windows11`: the wizard follows the Windows light or dark setting, on Inno Setup's Windows 11 style.
+- **Side panel** (`WizardImageFile`, Welcome and Finished pages). Graphite `#17191E` in both themes, with a radial glow of the program's signature colour at 38% opacity centred a third of the way down. The detailed icon is centred in the upper half at 104 units on the 164 by 314 grid. The name is in Sora Bold in Paper `#F6F5F2` under it, with a 40 by 3 unit rule in the signature colour. The credit is in Inter in `#C3C7CF` at the foot: "A Resolute tool by Rizonesoft", or the program's own credit as `app_assets` takes it. Rendered at every image-area size the Inno Setup 7.1.1 help lists, 202 by 386 at 100% to 534 by 1022 at 250%, and listed together with `WizardImageStretch=no`, so Setup shows each one at its own pixels and an icon is never stretched out of shape.
+- **Header icon** (`WizardSmallImageFile`, the inner pages). The detailed icon on a transparent ground, square, at every size the help lists: 58, 77, 97, 116, 124, 143 and 159 pixels (100% to 250%).
+- **No background image.** `WizardBackImageFile` stays unset; the page is the style's own ground.
+- **Setup file icon** (`SetupIconFile`). The program's icon with a badge on its lower right: a Graphite disc with a Paper down-arrow, cut out of the icon by a ring of the ground. The disc's radius is 19 units on the 96 grid (22 below 40 pixels, with the small drawing), so the badge stays readable at 16 pixels. This is the one place a badge sits on a program's icon (section 14); the installed program keeps its plain icon, and the Add/Remove Programs entry uses the installed program's icon.
+- **Pages.** Welcome, Ready, Installing and Finished, plus Inno Setup's own install-mode choice. No licence, components or program-group page.
+
+The comparison board is the artifact the decision was made on; the captures are kept in `docs/captures/installer/`.
