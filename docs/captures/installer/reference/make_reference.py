@@ -66,6 +66,8 @@ def load_spec(path: str) -> dict:
         brandkit.app_assets, brandkit.main = real
     # Until build.py declares `accent=` (D03 T01 section 3), the accent is the first colour of the detailed icon.
     captured.setdefault("accent", re.findall(r"#[0-9A-Fa-f]{6}", captured["large"])[0])
+    if captured.get("finish", True):   # the icon as the tool ships it, with the suite's gradient finish (section 14)
+        captured["large"], captured["small"] = brandkit.finished(captured["large"], "rfl"), brandkit.finished(captured["small"], "rfs")
     return captured
 
 

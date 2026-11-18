@@ -21,7 +21,10 @@ installed. Needs resvg_py and Pillow (`pip install resvg_py pillow`).
 from __future__ import annotations
 
 import io
+import math
+import re
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import resvg_py
@@ -37,6 +40,127 @@ PAPER, MUTED_ON_DARK = "#F6F5F2", "#C3C7CF"
 ICO_SIZES = (16, 20, 24, 32, 40, 48, 64, 96, 128, 256)
 SMALL_BELOW = 40   # the size under which the simplified drawing is used
 SOCIAL_COLUMN = 660  # the social preview's text column: from x 96 to just short of the icon at x 800
+
+# The icon finish, "Deep with gloss" (operator, 2026-11-18; DESIGN.md section 14). Every solid colour becomes a gradient
+# in its own hue across its face from the upper left: (offset, OKLab lightness shift, chroma factor) per stop. A white
+# sheen then lies over the top half of the whole silhouette.
+FINISH_STOPS = ((0.0, 0.15, 0.85), (0.45, 0.0, 1.0), (1.0, -0.13, 1.05))
+FINISH_DIRECTION = (0.0, 0.0, 0.75, 1.0)           # x1 y1 x2 y2 in each face's bounding box
+FINISH_SHEEN = (0.32, 8, 54)                       # opacity at the top, and the y range it fades over
+TONE_FLOOR, TONE_CEILING = "#1F1F1F", "#F0F0F0"    # section 14: no face darker or lighter than these
+SVG_NS = "http://www.w3.org/2000/svg"
+_HEX = re.compile(r"#(?:[0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})")
+_LEFT_AS_DRAWN = {"mask", "clipPath", "linearGradient", "radialGradient", "pattern"}
+ET.register_namespace("", SVG_NS)
+
+
+def _linear(c: float) -> float:
+    return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
+
+def _encoded(c: float) -> float:
+    return 12.92 * c if c <= 0.0031308 else 1.055 * c ** (1 / 2.4) - 0.055
+
+
+def _oklch(colour: str) -> tuple[float, float, float]:
+    """A #RRGGBB colour as OKLCh (Björn Ottosson's OKLab), hue in radians."""
+    r, g, b = (_linear(int(colour[i:i + 2], 16) / 255) for i in (1, 3, 5))
+    l_ = (0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b) ** (1 / 3)
+    m_ = (0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b) ** (1 / 3)
+    s_ = (0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b) ** (1 / 3)
+    a = 1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_
+    b2 = 0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_
+    return 0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_, math.hypot(a, b2), math.atan2(b2, a)
+
+
+def _linear_rgb(lightness: float, chroma: float, hue: float) -> tuple[float, float, float]:
+    a, b = chroma * math.cos(hue), chroma * math.sin(hue)
+    l_ = (lightness + 0.3963377774 * a + 0.2158037573 * b) ** 3
+    m_ = (lightness - 0.1055613458 * a - 0.0638541728 * b) ** 3
+    s_ = (lightness - 0.0894841775 * a - 1.2914855480 * b) ** 3
+    return (4.0767416621 * l_ - 3.3077115913 * m_ + 0.2309699292 * s_, -1.2684380046 * l_ + 2.6097574011 * m_ - 0.3413193965 * s_,
+            -0.0041960863 * l_ - 0.7034186147 * m_ + 1.7076147010 * s_)
+
+
+def tone(colour: str, lightness_shift: float, chroma_factor: float) -> str:
+    """`colour` made lighter or darker in its own hue, kept inside the tone limits and inside sRGB (by giving up chroma)."""
+    floor, ceiling = _oklch(TONE_FLOOR)[0], _oklch(TONE_CEILING)[0]
+    lightness, chroma, hue = _oklch(colour)
+    lightness = min(ceiling, max(floor, lightness + lightness_shift))
+    chroma *= chroma_factor
+    while True:
+        while chroma > 0 and not all(-1e-4 <= v <= 1 + 1e-4 for v in _linear_rgb(lightness, chroma, hue)):
+            chroma = max(0.0, chroma - 0.002)
+        out = "#" + "".join(f"{round(_encoded(min(1.0, max(0.0, v))) * 255):02X}" for v in _linear_rgb(lightness, chroma, hue))
+        # Rounding to 8 bits can land a hair past a limit: step back inside it.
+        if _oklch(out)[0] < floor:
+            lightness += 0.001
+        elif _oklch(out)[0] > ceiling:
+            lightness -= 0.001
+        else:
+            return out
+
+
+def _local(tag: str) -> str:
+    return tag.rsplit("}", 1)[-1]
+
+
+def finished(inner: str, uid: str = "rf") -> str:
+    """The drawing with the suite's finish. Masks, clip paths, patterns and existing gradients are left exactly as
+    drawn (whole subtrees, nested ones included), so a cut-out still shows the ground. A face with no width or no height
+    (a straight line) has no bounding box for its gradient, so each paint names its flat colour as the fallback after
+    the url. A paint the finish cannot read (a named colour, currentColor, an inline style) fails the build by name
+    rather than staying flat unseen."""
+    root = ET.fromstring(f'<g xmlns="{SVG_NS}">{inner}</g>')
+    taken = {element.get("id") for element in root.iter() if element.get("id")}
+    while any(f"{uid}{suffix}" in taken for suffix in ("0", "s", "m", "b")):
+        uid += "x"
+    ids: dict[str, str] = {}
+    gradients: list[str] = []
+
+    def paint(colour: str) -> str:
+        colour = colour.upper()
+        if len(colour) == 4:
+            colour = "#" + "".join(c * 2 for c in colour[1:])
+        if colour not in ids:
+            gid = f"{uid}{len(ids)}"
+            while gid in taken:
+                gid += "x"
+            ids[colour] = gid
+            x1, y1, x2, y2 = FINISH_DIRECTION
+            stops = "".join(f'<stop offset="{o:g}" stop-color="{tone(colour, dl, cf)}"/>' for o, dl, cf in FINISH_STOPS)
+            gradients.append(f'<linearGradient id="{gid}" x1="{x1:g}" y1="{y1:g}" x2="{x2:g}" y2="{y2:g}">{stops}</linearGradient>')
+        return f"url(#{ids[colour]}) {colour}"
+
+    def visit(element: ET.Element) -> None:
+        if _local(element.tag) in _LEFT_AS_DRAWN:
+            return
+        if _local(element.tag) == "style":
+            raise ValueError("brandkit: the finish cannot read a <style> sheet; give each face fill and stroke attributes")
+        style = element.get("style", "")
+        if any(part.split(":", 1)[0].strip() in ("fill", "stroke") for part in style.split(";")):
+            raise ValueError(f"brandkit: the finish cannot read the inline style {style!r}; use fill and stroke attributes")
+        for name in ("fill", "stroke"):
+            value = element.get(name)
+            if value is None or value == "none" or value.startswith("url("):
+                continue
+            if not _HEX.fullmatch(value):
+                raise ValueError(f"brandkit: the finish cannot read {name}={value!r}; give the colour as #RRGGBB")
+            element.set(name, paint(value))
+        for child in element:
+            visit(child)
+
+    for child in root:
+        visit(child)
+    # Each child is written on its own, so it carries any namespace it needs (xlink:href), and nothing is cut by hand.
+    body = (root.text or "") + "".join(ET.tostring(child, encoding="unicode") for child in root)
+    opacity, top, bottom = FINISH_SHEEN
+    return (f'<defs>{"".join(gradients)}'
+            f'<linearGradient id="{uid}s" gradientUnits="userSpaceOnUse" x1="0" y1="{top}" x2="0" y2="{bottom}">'
+            f'<stop offset="0" stop-color="#FFFFFF" stop-opacity="{opacity}"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>'
+            f'</linearGradient><mask id="{uid}m" mask-type="alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="96" height="96">'
+            f'<use href="#{uid}b"/></mask></defs>'
+            f'<g id="{uid}b">{body}</g><rect width="96" height="96" fill="url(#{uid}s)" mask="url(#{uid}m)"/>')
 
 
 def svg(width: int, height: int, body: str, label: str) -> str:
@@ -98,10 +222,13 @@ def icon_files(slug: str, large: str, small: str) -> dict[str, bytes]:
 
 
 def app_assets(slug: str, name: str, tagline: str, large: str, small: str, social_ground: str, social_muted: str,
-               credit: str = "A Resolute tool by Rizonesoft") -> dict[str, bytes]:
+               credit: str = "A Resolute tool by Rizonesoft", finish: bool = True) -> dict[str, bytes]:
     """A tool's whole asset set. `large` and `small` are the icon's inner markup on a 96-unit grid, free-standing:
     no tile behind it, so it must read on a light and on a dark ground by itself (DESIGN.md section 14). `credit` is the
-    small line under the tagline of the social preview: the launcher is not "a Resolute tool" and passes its own."""
+    small line under the tagline of the social preview: the launcher is not "a Resolute tool" and passes its own.
+    `finish` gives the drawing the suite's gradient finish; the launcher, whose gradients are drawn by hand, passes False."""
+    if finish:
+        large, small = finished(large, "rfl"), finished(small, "rfs")
     big = svg(96, 96, large, f"{name} icon")
     little = svg(96, 96, small, f"{name} icon, small sizes")
     files = icon_files(slug, big, little)
