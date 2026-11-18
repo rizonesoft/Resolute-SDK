@@ -9,5 +9,6 @@ Governing documents: [AGENTS.md](../AGENTS.md) for what this repository is, [DES
 | 00 | 00-workspace/TODO-01-standalone-sdk.md | Standalone build, moved tests, gates, pins, changelog |
 | 01 | 01-design/TODO-01-theme-palette.md | The chosen palette in the UI library, proven and captured |
 | 02 | 02-shared-layers/TODO-01-layer-plans.md | Framework and repair contract plans, refdata, AutoIt reference |
+| 03 | 03-installer/TODO-01-installer-shape.md | One branded Inno Setup installer shape for every Windows program |
 
 ## Completed TODOs

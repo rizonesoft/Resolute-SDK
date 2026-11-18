@@ -62,6 +62,29 @@ Sections: 1 | Checklist items: 4
 | ------ | ---------- | ------------------------------------------------------- | ----- | ----- |
 | [ ]    | D02 T01 §2 | Repair Contract Plan Authored From Resolute's Domain 02 | none  | 4     |
 
-Progress: 0/21 verified sections, 7 ready to run now.
+### Phase 5: The installer
 
-Checklist: 0/114 items completed (includes Commit items).
+Sections: 16 | Checklist items: 62
+
+| Status | Reference   | Deliverable                                       | Needs                         | Items |
+| ------ | ----------- | ------------------------------------------------- | ----------------------------- | ----- |
+| [ ]    | D03 T01 §1  | Inno Setup Pinned in the Toolchain                | windows-host                  | 4     |
+| [ ]    | D03 T01 §2  | Installer Frame Approved in DESIGN.md             | owner-decision                | 5     |
+| [ ]    | D03 T01 §3  | Wizard Images Built from Each Tool's Brand        | none                          | 4     |
+| [ ]    | D03 T01 §4  | Setup Icon with the Setup Badge                   | none                          | 3     |
+| [ ]    | D03 T01 §5  | Per-Program installer.json Schema                 | none                          | 4     |
+| [ ]    | D03 T01 §6  | Shared Inno Script: Install, Uninstall, Shortcuts | windows-host, display-session | 5     |
+| [ ]    | D03 T01 §7  | Per-User Default with an All-Users Choice         | windows-host, display-session | 3     |
+| [ ]    | D03 T01 §8  | In-Place Upgrade That Keeps Settings              | windows-host, display-session | 5     |
+| [ ]    | D03 T01 §9  | Portable Extract Option                           | windows-host, display-session | 3     |
+| [ ]    | D03 T01 §10 | Silent Install and Uninstall Proven               | windows-host                  | 3     |
+| [ ]    | D03 T01 §11 | Packaging Script and Signing Hook                 | windows-host                  | 4     |
+| [ ]    | D03 T01 §12 | winget Manifest per Release                       | windows-host                  | 3     |
+| [ ]    | D03 T01 §13 | Release Feed Format and Host                      | owner-decision                | 4     |
+| [ ]    | D03 T01 §14 | Notify-Only Update Check in the UI Library        | windows-host, display-session | 5     |
+| [ ]    | D03 T01 §15 | MemBoost Pilot, End to End                        | windows-host, display-session | 4     |
+| [ ]    | D03 T01 §16 | Rollout to Every Consumer                         | windows-host                  | 3     |
+
+Progress: 0/37 verified sections, 9 ready to run now.
+
+Checklist: 0/176 items completed (includes Commit items).
