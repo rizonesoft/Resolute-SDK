@@ -50,8 +50,9 @@ title: "TODO-01 -- One installer shape for every Windows program"
 | 12 | §12 | winget manifest per release | §10, §11 | [ ] |
 | 13 | §13 | Release feed format and host | -- | [ ] |
 | 14 | §14 | Notify-only update check in the UI library | §13 | [ ] |
-| 15 | §15 | MemBoost pilot, end to end | §10, §11, §12, §14 | [ ] |
+| 15 | §15 | MemBoost pilot, end to end | §10, §11, §12, §14, §17 | [ ] |
 | 16 | §16 | Rollout to every consumer | §15 | [ ] |
+| 17 | §17 | Setup warns when a newer version exists | §6, §13 | [ ] |
 
 ## 1. Inno Setup Pinned in the Toolchain
 
@@ -308,22 +309,22 @@ Each release produces a winget manifest set from `installer.json` and the built 
 
 ## 13. Release Feed Format and Host
 
-The update check needs a small public feed per program saying the latest version and where its release page is. Where it is hosted is the operator's call.
+The operator decided on 2026-11-18: feeds and setup downloads are served from a Cloudflare Worker and R2 at `https://updates.rizonesoft.com`, run by the private `rizonesoft/Updates` repository (`D:\Updates`, `todo/00-service/TODO-01-update-service.md`), with an Ed25519 signed feed and `stable` and `beta` channels. This section makes the SDK speak that contract and publish to it.
 
 **Phase:** 5
-**Needs:** owner-decision
+**Needs:** none
 **Surface:** no
 
 **Build order:**
 
-1. Define the feed and its host. Done when: `docs/installer.md` documents the JSON and the URL pattern, and the host is recorded here.
+1. Vendor the v1 feed schema and the public key, and publish from `package.ps1`. Done when: a fixture build validates its feed against the vendored schema and calls the publisher in dry-run.
 
-- [ ] Define the feed as JSON with `name`, `version`, `released` and `releaseUrl`, one file per program, in `installer/feed.schema.json`. Done when: a fixture validates.
-- [ ] Ask the operator where feeds are hosted (for example rizonesoft.com, the Bunny CDN, or GitHub Releases' latest-release API). Done when: the answer is recorded here and `owner-decision` is removed.
-- [ ] Make `scripts/package.ps1` write the program's feed file into `dist/` beside the setup. Done when: the fixture build produces a valid feed.
-- [ ] Commit: `installer: the release feed`
+- [ ] Copy `schema/feed-v1.schema.json` and `keys/feed-ed25519.pub` from the Updates repository into `installer/feed/`, recording their source commit in `installer/feed/SOURCE`. Done when: both files and the commit are present. Cheaper substitute: a second hand-written schema in the SDK that drifts.
+- [ ] Set `feedUrl` in `installer.json` to `https://updates.rizonesoft.com/v1/<product>/<channel>/feed.json`, with `<channel>` filled at run time. Done when: `scripts/installer_config.py` refuses any other host.
+- [ ] Add `-Publish` and `-Channel stable|beta` to `scripts/package.ps1`, calling the Updates repository's `scripts/publish.py` after a successful build. Done when: `-Publish -WhatIf` prints the upload it would make.
+- [ ] Commit: `installer: the Updates feed contract and publish step`
 
-**Test checkpoint:** `python -m unittest scripts.tests.test_package` passes with a case validating the written feed against `installer/feed.schema.json`.
+**Test checkpoint:** `python -m unittest scripts.tests.test_package` passes with a case validating a written feed against `installer/feed/feed-v1.schema.json`, and fails when `feedUrl` names another host.
 
 ## 14. Notify-Only Update Check in the UI Library
 
@@ -341,7 +342,10 @@ An installed program checks its feed at most once a day and shows a notice with 
 
 1. Add the check and the notice to `shared/resolute-ui`. Done when: with a fixture feed newer than the build the notice shows, and with it equal or older nothing shows.
 
-- [ ] Add `rui::UpdateCheck` fetching `feedUrl` over HTTPS with WinHTTP on a background thread, at most once per 24 hours, silent on any network or parse failure. Done when: an offline run shows nothing and logs one line.
+- [ ] Add `rui::UpdateCheck` fetching `feedUrl` and its `.sig` over HTTPS with WinHTTP on a background thread, at most once per 24 hours, silent on any network or parse failure. Done when: an offline run shows nothing and logs one line.
+- [ ] Verify the feed's Ed25519 signature against the public key embedded from `installer/feed/feed-ed25519.pub`, and open only `releaseUrl` values on `rizonesoft.com`. Done when: a tampered fixture feed shows no notice and logs the refusal. Cheaper substitute: trusting HTTPS alone.
+- [ ] Add an "Update channel" setting (`Stable` default, `Beta`) beside "Check for updates". Done when: switching to Beta reads the beta feed, read back after restart.
+- [ ] When the running version is listed in `yanked`, show the notice with the yank reason even if it was dismissed. Done when: a fixture with the running version yanked shows the reason.
 - [ ] Add the notice and the "Check for updates" setting, persisted with the tool's other settings. Done when: turning it off stops the request, read back from settings after restart.
 - [ ] Open `releaseUrl` in the default browser on "View release" and remember a dismissed version. Done when: a dismissed version never shows again and a newer one does.
 - [ ] Add unit tests for version comparison, throttling and dismissal. Done when: `ctest -L update` passes and fails if a download path is added.
@@ -389,6 +393,30 @@ After the pilot, every program that pins the SDK adopts the installer the same w
 - [ ] Commit: `installer: rollout script`
 
 **Test checkpoint:** `python scripts/installer-rollout.py --check` exits 0, reporting every consumer with a valid `installer.json` and an `sdk.json` at or past the installer commit.
+
+## 17. Setup Warns When a Newer Version Exists
+
+An old setup file someone kept still installs, but its welcome page first says a newer version exists, with a link. It never downloads (operator, 2026-11-18).
+
+**Phase:** 5
+**Needs:** windows-host, display-session
+**Surface:** yes
+**Fidelity:** the welcome page of a real setup built from an older fixture version, light and dark.
+**Job:** a person installing an old copy learns a newer one exists and can get it. Consumer: the wizard.
+**Treatment:** one line and a "Get the latest" link on the welcome page when the stable feed's version is newer; nothing when offline or when the feed fails verification. Cheaper substitute that fails: a modal message box, or downloading the newer setup.
+**Chrome:** Inno Setup's welcome page with one added label and link.
+
+**Build order:**
+
+1. Add the check to `[Code]` in `installer/Resolute.iss`. Done when: a setup older than the fixture feed shows the line and a current one does not.
+
+- [ ] Fetch the stable feed with the `DownloadTemporaryFile` support function (help: `DownloadTemporaryFile`) in `InitializeWizard`, with a 3-second timeout. Done when: an offline run starts the wizard with no delay beyond the timeout and no message.
+- [ ] Verify the feed's signature with ISSigTool's Ed25519 support or a bundled verifier before trusting it. Done when: a tampered fixture feed shows no line. Cheaper substitute: trusting HTTPS alone.
+- [ ] Add the label and the link to the welcome page, opening `releaseUrl` on `rizonesoft.com` only. Done when: the round-trip test sees the label on an old build. A `/VERYSILENT` run never fetches. Cheaper substitute: a check that also runs in silent installs and delays scripted deployments.
+- [ ] Add old-build, current-build, offline and silent cases to `scripts/tests/test_installer_roundtrip.py`. Done when: they pass.
+- [ ] Commit: `installer: setup warns when a newer version exists`
+
+**Test checkpoint:** `bosun run -- python -m unittest scripts.tests.test_installer_roundtrip` passes the four cases, and fails when the signature check is removed.
 
 ## Verification
 

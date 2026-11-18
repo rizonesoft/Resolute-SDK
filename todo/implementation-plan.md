@@ -64,7 +64,7 @@ Sections: 1 | Checklist items: 4
 
 ### Phase 5: The installer
 
-Sections: 16 | Checklist items: 62
+Sections: 17 | Checklist items: 70
 
 | Status | Reference   | Deliverable                                       | Needs                         | Items |
 | ------ | ----------- | ------------------------------------------------- | ----------------------------- | ----- |
@@ -80,11 +80,12 @@ Sections: 16 | Checklist items: 62
 | [ ]    | D03 T01 §10 | Silent Install and Uninstall Proven               | windows-host                  | 3     |
 | [ ]    | D03 T01 §11 | Packaging Script and Signing Hook                 | windows-host                  | 4     |
 | [ ]    | D03 T01 §12 | winget Manifest per Release                       | windows-host                  | 3     |
-| [ ]    | D03 T01 §13 | Release Feed Format and Host                      | owner-decision                | 4     |
-| [ ]    | D03 T01 §14 | Notify-Only Update Check in the UI Library        | windows-host, display-session | 5     |
+| [ ]    | D03 T01 §13 | Release Feed Format and Host                      | none                          | 4     |
+| [ ]    | D03 T01 §14 | Notify-Only Update Check in the UI Library        | windows-host, display-session | 8     |
+| [ ]    | D03 T01 §17 | Setup Warns When a Newer Version Exists           | windows-host, display-session | 5     |
 | [ ]    | D03 T01 §15 | MemBoost Pilot, End to End                        | windows-host, display-session | 4     |
 | [ ]    | D03 T01 §16 | Rollout to Every Consumer                         | windows-host                  | 3     |
 
-Progress: 0/37 verified sections, 9 ready to run now.
+Progress: 0/38 verified sections, 10 ready to run now.
 
-Checklist: 0/176 items completed (includes Commit items).
+Checklist: 0/184 items completed (includes Commit items).
