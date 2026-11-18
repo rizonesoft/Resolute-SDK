@@ -1,6 +1,6 @@
 {
   "title": "Resolute-SDK implementation plan",
-  "acceptance": "The launcher and a tool build, test and ship as standalone executables from a clean clone against a pinned SDK commit, with the SDK's own gates green.",
+  "acceptance": "The launcher and a tool build, test and ship as standalone executables from a clean clone against a pinned SDK version line from the installed SDK, with the SDK's own gates green.",
   "phases": {
     "0": "Repository and tooling",
     "1": "The SDK builds, tests and gates itself",
